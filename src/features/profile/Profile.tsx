@@ -32,8 +32,61 @@ export default function Profile() {
     fetchUserData();
   }, [user]);
 
-  if (!user) return <p>No estás logueado.</p>;
-  if (!userData) return <p>Cargando perfil...</p>;
+  if (!user) return <p style={{ textAlign: "center", marginTop: 50 }}>No estás logueado.</p>;
+  if (!userData) return <p style={{ textAlign: "center", marginTop: 50 }}>Cargando perfil...</p>;
+
+  // ---------- Estilos ----------
+  const pageStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "flex-start",
+    padding: 16,
+    backgroundColor: "#1e1e2f",
+    color: "#fff",
+    boxSizing: "border-box",
+  };
+
+  const containerStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 700,
+    padding: 32,
+    borderRadius: 12,
+    backgroundColor: "#2a2a3d",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    display: "flex",
+    flexDirection: "column",
+    gap: 24, // separación entre bloques (datos, inputs, botón)
+  };
+
+  const userInfoStyle: React.CSSProperties = {
+    display: "flex",
+    flexDirection: "column",
+    gap: 4, // los <p> estarán más juntos
+    marginBottom: 16,
+  };
+
+  const inputStyle: React.CSSProperties = {
+    width: "100%",
+    padding: 10,
+    borderRadius: 8,
+    border: "1px solid #555",
+    backgroundColor: "#1a1a2b",
+    color: "#fff",
+    boxSizing: "border-box",
+  };
+
+  const buttonStyle: React.CSSProperties = {
+    width: "100%",
+    padding: 12,
+    backgroundColor: "#4CAF50",
+    color: "#fff",
+    border: "none",
+    borderRadius: 8,
+    cursor: "pointer",
+    fontWeight: 600,
+  };
+  // ---------- Fin estilos ----------
 
   const handleAddPet = async () => {
     if (!petName || !petType || petAge === "") {
@@ -60,36 +113,43 @@ export default function Profile() {
   };
 
   return (
-    <div style={{ padding: 16, maxWidth: 400, margin: "0 auto" }}>
-      <h1>Perfil de usuario</h1>
-      <p><strong>Nombre:</strong> {userData.firstName}</p>
-      <p><strong>Apellidos:</strong> {userData.lastName}</p>
-      <p><strong>Email:</strong> {userData.email}</p>
-      <p><strong>Edad:</strong> {userData.age}</p>
+    <div style={pageStyle}>
+      <div style={containerStyle}>
+        <h1>Perfil de usuario</h1>
 
-      <h2>Añadir Mascota</h2>
-      <input
-        type="text"
-        placeholder="Nombre de la mascota"
-        value={petName}
-        onChange={(e) => setPetName(e.target.value)}
-        style={{ display: "block", marginBottom: 8, width: "100%" }}
-      />
-      <input
-        type="text"
-        placeholder="Tipo de mascota"
-        value={petType}
-        onChange={(e) => setPetType(e.target.value)}
-        style={{ display: "block", marginBottom: 8, width: "100%" }}
-      />
-      <input
-        type="number"
-        placeholder="Edad de la mascota"
-        value={petAge}
-        onChange={(e) => setPetAge(Number(e.target.value))}
-        style={{ display: "block", marginBottom: 8, width: "100%" }}
-      />
-      <button onClick={handleAddPet} style={{ width: "100%" }}>Añadir Mascota</button>
+        {/* Datos del usuario */}
+        <div style={userInfoStyle}>
+          <p><strong>Nombre:</strong> {userData.firstName}</p>
+          <p><strong>Apellidos:</strong> {userData.lastName}</p>
+          <p><strong>Email:</strong> {userData.email}</p>
+          <p><strong>Edad:</strong> {userData.age}</p>
+        </div>
+
+        {/* Añadir mascota */}
+        <h2>Añadir Mascota</h2>
+        <input
+          type="text"
+          placeholder="Nombre de la mascota"
+          value={petName}
+          onChange={(e) => setPetName(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="text"
+          placeholder="Tipo de mascota"
+          value={petType}
+          onChange={(e) => setPetType(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="number"
+          placeholder="Edad de la mascota"
+          value={petAge}
+          onChange={(e) => setPetAge(Number(e.target.value))}
+          style={inputStyle}
+        />
+        <button onClick={handleAddPet} style={buttonStyle}>Añadir Mascota</button>
+      </div>
     </div>
   );
 }
