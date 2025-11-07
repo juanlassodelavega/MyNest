@@ -14,8 +14,8 @@ export default function Profile() {
   const [user] = useAuthState(auth);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [petName, setPetName] = useState("");
-  const [petType, setPetType] = useState("Perro");
-  const [petDob, setPetDob] = useState("");
+  const [petType, setPetType] = useState("");
+  const [petBirthdate, setPetBirthdate] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -89,7 +89,7 @@ export default function Profile() {
   // ---------- Fin estilos ----------
 
   const handleAddPet = async () => {
-    if (!petName || !petType || !petDob) {
+    if (!petName || !petType || !petBirthdate) {
       alert("Completa todos los campos de la mascota");
       return;
     }
@@ -100,13 +100,13 @@ export default function Profile() {
         userId: user.uid,
         name: petName,
         type: petType,
-        dob: petDob,
+        birthdate: petBirthdate, // guardamos fecha en Firebase
       });
 
       alert("Mascota añadida!");
       setPetName("");
-      setPetType("Perro");
-      setPetDob("");
+      setPetType("");
+      setPetBirthdate("");
     } catch (error) {
       console.error("Error al añadir mascota:", error);
     }
@@ -140,6 +140,7 @@ export default function Profile() {
           onChange={(e) => setPetType(e.target.value)}
           style={inputStyle}
         >
+          <option value="" disabled>Selecciona tipo de mascota</option>
           <option value="Perro">Perro</option>
           <option value="Gato">Gato</option>
           <option value="Ave">Ave</option>
@@ -150,8 +151,8 @@ export default function Profile() {
         <input
           type="date"
           placeholder="Fecha de nacimiento"
-          value={petDob}
-          onChange={(e) => setPetDob(e.target.value)}
+          value={petBirthdate}
+          onChange={(e) => setPetBirthdate(e.target.value)}
           style={inputStyle}
         />
 
