@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
+import { FiLogIn, FiLogOut, FiUser, FiHome } from "react-icons/fi";
 
 export default function Header() {
   const [user] = useAuthState(auth);
@@ -8,8 +9,10 @@ export default function Header() {
 
   const handleLogout = async () => {
     await auth.signOut();
-    navigate("/"); // Redirige al home al cerrar sesión
+    navigate("/");
   };
+
+  const iconStyle = { fontSize: "1.5rem", display: "flex", alignItems: "center" };
 
   return (
     <header
@@ -25,32 +28,33 @@ export default function Header() {
         width: "100%",
       }}
     >
-      <Link
-        to={user ? "/dashboard" : "/"}
-        style={{ color: "white", fontWeight: 700, fontSize: "1.5rem", textDecoration: "none" }}
-      >
-        MyNest
+      <Link to={user ? "/dashboard" : "/"} style={{ color: "white", ...iconStyle }}>
+        <FiHome />
       </Link>
 
-      <nav style={{ display: "flex", gap: 16 }}>
+      <nav style={{ display: "flex", gap: 16, alignItems: "center" }}>
         {!user && (
-          <Link to="/login" style={{ color: "white" }}>Iniciar sesión</Link>
+          <Link to="/login" style={{ color: "white", ...iconStyle }}>
+            <FiLogIn />
+          </Link>
         )}
         {user && (
           <>
-            <Link to="/profile" style={{ color: "white" }}>Perfil</Link>
+            <Link to="/profile" style={{ color: "white", ...iconStyle }}>
+              <FiUser />
+            </Link>
             <button
               onClick={handleLogout}
               style={{
                 background: "transparent",
-                border: "1px solid white",
+                border: "none",
                 color: "white",
-                padding: "4px 12px",
-                borderRadius: 4,
                 cursor: "pointer",
+                ...iconStyle,
               }}
+              title="Cerrar sesión"
             >
-              Cerrar sesión
+              <FiLogOut />
             </button>
           </>
         )}
