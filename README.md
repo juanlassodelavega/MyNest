@@ -77,6 +77,7 @@ src/
 ## ⚡ Autor
 
 Juan Lasso de la Vega – [GitHub](https://github.com/juanlassodelavega)
+<br>
 Miguel Lasso de la Vega – [GitHub](https://github.com/)
 
 ---
