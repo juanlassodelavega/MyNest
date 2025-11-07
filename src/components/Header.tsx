@@ -29,7 +29,7 @@ export default function Header() {
       {/* Logo con redirección condicional */}
       <Link
         to={homeLink}
-        style={{ fontSize: 24, fontWeight: "bold", textDecoration: "none", color: "#333" }}
+        style={{ fontSize: 24, fontWeight: "bold", textDecoration: "none", color: "white" }}
       >
         MyNest
       </Link>
@@ -37,7 +37,7 @@ export default function Header() {
       <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
         {user ? (
           <>
-            <Link to="/profile" style={{ fontSize: 24 }}>
+            <Link to="/profile" style={{ fontSize: 24, color: "white" }}>
               <FiUser />
             </Link>
             <button
@@ -48,7 +48,7 @@ export default function Header() {
             </button>
           </>
         ) : (
-          <Link to="/login" style={{ fontSize: 24 }}>
+          <Link to="/login" style={{ fontSize: 24, color: "white" }}>
             <FiLogIn />
           </Link>
         )}
