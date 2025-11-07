@@ -76,7 +76,7 @@ src/
 
 ## ⚡ Autor
 
-Juan Pérez – [GitHub](https://github.com/tu-usuario)
+Juan Lasso de la Vega – [GitHub](https://github.com/juanlassodelavega)
 
 ---
 
