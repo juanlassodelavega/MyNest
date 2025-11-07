@@ -1,58 +1,60 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
-import { FiLogIn, FiLogOut, FiUser } from "react-icons/fi";
 
 export default function Header() {
   const [user] = useAuthState(auth);
   const navigate = useNavigate();
 
-  const homeLink = user ? "/dashboard" : "/";
-
   const handleLogout = async () => {
     await auth.signOut();
-    navigate("/"); // redirige al Home
+    navigate("/"); // Redirige al home al cerrar sesión
   };
 
   return (
     <header
       style={{
-        width: "100%",
         display: "flex",
-        justifyContent: "space-between",
         alignItems: "center",
+        justifyContent: "space-between",
         padding: "16px 32px",
-        borderBottom: "1px solid #ddd",
+        backgroundColor: "#1a1a1a",
+        color: "white",
+        minHeight: 64,
         boxSizing: "border-box",
+        width: "100%",
       }}
     >
-      {/* Logo con redirección condicional */}
       <Link
-        to={homeLink}
-        style={{ fontSize: 24, fontWeight: "bold", textDecoration: "none", color: "white" }}
+        to={user ? "/dashboard" : "/"}
+        style={{ color: "white", fontWeight: 700, fontSize: "1.5rem", textDecoration: "none" }}
       >
         MyNest
       </Link>
 
-      <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-        {user ? (
+      <nav style={{ display: "flex", gap: 16 }}>
+        {!user && (
+          <Link to="/login" style={{ color: "white" }}>Iniciar sesión</Link>
+        )}
+        {user && (
           <>
-            <Link to="/profile" style={{ fontSize: 24, color: "white" }}>
-              <FiUser />
-            </Link>
+            <Link to="/profile" style={{ color: "white" }}>Perfil</Link>
             <button
               onClick={handleLogout}
-              style={{ background: "none", border: "none", cursor: "pointer", fontSize: 24 }}
+              style={{
+                background: "transparent",
+                border: "1px solid white",
+                color: "white",
+                padding: "4px 12px",
+                borderRadius: 4,
+                cursor: "pointer",
+              }}
             >
-              <FiLogOut />
+              Cerrar sesión
             </button>
           </>
-        ) : (
-          <Link to="/login" style={{ fontSize: 24, color: "white" }}>
-            <FiLogIn />
-          </Link>
         )}
-      </div>
+      </nav>
     </header>
   );
 }
