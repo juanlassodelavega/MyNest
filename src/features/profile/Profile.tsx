@@ -14,8 +14,8 @@ export default function Profile() {
   const [user] = useAuthState(auth);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [petName, setPetName] = useState("");
-  const [petType, setPetType] = useState("");
-  const [petAge, setPetAge] = useState<number | "">("");
+  const [petType, setPetType] = useState("Perro");
+  const [petDob, setPetDob] = useState("");
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -56,13 +56,13 @@ export default function Profile() {
     boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
     display: "flex",
     flexDirection: "column",
-    gap: 24, // separación entre bloques (datos, inputs, botón)
+    gap: 24,
   };
 
   const userInfoStyle: React.CSSProperties = {
     display: "flex",
     flexDirection: "column",
-    gap: 4, // los <p> estarán más juntos
+    gap: 4,
     marginBottom: 16,
   };
 
@@ -89,7 +89,7 @@ export default function Profile() {
   // ---------- Fin estilos ----------
 
   const handleAddPet = async () => {
-    if (!petName || !petType || petAge === "") {
+    if (!petName || !petType || !petDob) {
       alert("Completa todos los campos de la mascota");
       return;
     }
@@ -100,13 +100,13 @@ export default function Profile() {
         userId: user.uid,
         name: petName,
         type: petType,
-        age: Number(petAge),
+        dob: petDob,
       });
 
       alert("Mascota añadida!");
       setPetName("");
-      setPetType("");
-      setPetAge("");
+      setPetType("Perro");
+      setPetDob("");
     } catch (error) {
       console.error("Error al añadir mascota:", error);
     }
@@ -134,20 +134,27 @@ export default function Profile() {
           onChange={(e) => setPetName(e.target.value)}
           style={inputStyle}
         />
-        <input
-          type="text"
-          placeholder="Tipo de mascota"
+
+        <select
           value={petType}
           onChange={(e) => setPetType(e.target.value)}
           style={inputStyle}
-        />
+        >
+          <option value="Perro">Perro</option>
+          <option value="Gato">Gato</option>
+          <option value="Ave">Ave</option>
+          <option value="Roedor">Roedor</option>
+          <option value="Otro">Otro</option>
+        </select>
+
         <input
-          type="number"
-          placeholder="Edad de la mascota"
-          value={petAge}
-          onChange={(e) => setPetAge(Number(e.target.value))}
+          type="date"
+          placeholder="Fecha de nacimiento"
+          value={petDob}
+          onChange={(e) => setPetDob(e.target.value)}
           style={inputStyle}
         />
+
         <button onClick={handleAddPet} style={buttonStyle}>Añadir Mascota</button>
       </div>
     </div>

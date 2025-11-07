@@ -6,7 +6,7 @@ import Map from "../../components/Map";
 interface Pet {
   name: string;
   type: string;
-  age: number;
+  dob: string; // fecha de nacimiento
 }
 
 export default function Dashboard() {
@@ -33,6 +33,12 @@ export default function Dashboard() {
 
     fetchPets();
   }, []);
+
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const diffMs = Date.now() - birthDate.getTime();
+    return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
+  };
 
   // ---------- Estilos ----------
   const pageStyle: React.CSSProperties = {
@@ -87,7 +93,6 @@ export default function Dashboard() {
     <div style={pageStyle}>
       <h1 style={{ marginBottom: 24 }}>Mi Dashboard</h1>
 
-      {/* Contenedor principal */}
       <div style={containerStyle}>
         {/* Mapa */}
         <div style={mapStyle}>
@@ -103,10 +108,12 @@ export default function Dashboard() {
             <ul style={petListStyle}>
               {pets.map((pet, i) => (
                 <li key={i} style={petItemStyle}>
-                  <span>
+                  <div>
                     <strong>{pet.name}</strong> - {pet.type}
-                  </span>
-                  <span>{pet.age} años</span>
+                  </div>
+                  <div>
+                    {calculateAge(pet.dob)} años - {new Date(pet.dob).toLocaleDateString()}
+                  </div>
                 </li>
               ))}
             </ul>
