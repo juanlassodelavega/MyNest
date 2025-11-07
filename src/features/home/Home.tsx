@@ -1,31 +1,41 @@
 export default function Home() {
-  const pageStyle = { 
-    height: "100%", 
-    flex: 1, 
-    display: "flex", 
-    justifyContent: "center", 
-    alignItems: "center", 
-    padding: "16px", 
-    boxSizing: "border-box" as const 
+  // ---------- Estilos ----------
+  const pageStyle: React.CSSProperties = {
+    minHeight: "100vh",
+    display: "flex",
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 16,
+    backgroundColor: "#1e1e2f",
+    boxSizing: "border-box",
   };
 
-  const containerStyle = { 
-    width: "100%", 
-    maxWidth: 600,  // <-- más ancho
-    padding: 40,    // <-- un poco más de padding
-    borderRadius: 8, 
-    border: "1px solid #ddd", 
-    backgroundColor: "#1a1a1a", 
-    color: "#fff", 
-    textAlign: "center" as const,
-    boxSizing: "border-box" as const 
+  const containerStyle: React.CSSProperties = {
+    width: "100%",
+    maxWidth: 500,
+    padding: 40,
+    borderRadius: 12,
+    backgroundColor: "#2a2a3d",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    color: "#fff",
+    textAlign: "center",
   };
+
+  const headingStyle: React.CSSProperties = {
+    marginBottom: 16,
+  };
+
+  const textStyle: React.CSSProperties = {
+    fontSize: 18,
+    lineHeight: 1.5,
+  };
+  // ---------- Fin estilos ----------
 
   return (
     <div style={pageStyle}>
       <div style={containerStyle}>
-        <h1>Bienvenido a MyNest</h1>
-        <p>La red social para dueños de mascotas.</p>
+        <h1 style={headingStyle}>Bienvenido a MyNest</h1>
+        <p style={textStyle}>La red social para dueños de mascotas.</p>
       </div>
     </div>
   );
