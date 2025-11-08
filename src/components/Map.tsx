@@ -1,59 +1,97 @@
-import { MapContainer, TileLayer, Marker, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
-import { useEffect, useState } from "react";
-
-// Importar iconos de Leaflet usando import para TypeScript
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
 
-// Configurar icono por defecto
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
-});
+interface LatLng {
+  lat: number;
+  lng: number;
+}
 
-export default function Map({ markers, setMarkers }: any) {
-  const [center, setCenter] = useState({ lat: 40.4168, lng: -3.7038 }); // Madrid por defecto
+export interface MarkerData {
+  position: LatLng;
+  name: string;
+  type: "veterinario" | "tienda" | "parque" | "peluqueria";
+}
 
-  useEffect(() => {
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setCenter({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          });
-        },
-        () => {
-          console.log("No se pudo obtener ubicación, usando Madrid por defecto");
-        }
-      );
-    }
-  }, []);
+interface MapProps {
+  markers: MarkerData[];
+  center: LatLng;
+  zoom: number;
+  setCenter: (center: LatLng) => void;
+}
 
-  function ClickHandler() {
-    useMapEvents({
-      click(e) {
-        setMarkers([...markers, e.latlng]);
-      },
-    });
-    return null;
+function MapEvents({ setCenter }: { setCenter: (center: LatLng) => void }) {
+  useMapEvents({
+    moveend: (e) => {
+      const map = e.target;
+      const c = map.getCenter();
+      setCenter({ lat: c.lat, lng: c.lng });
+    },
+  });
+  return null;
+}
+
+const getIcon = (type: MarkerData["type"]) => {
+  switch (type) {
+    case "veterinario":
+      return new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        shadowUrl: markerShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+    case "tienda":
+      return new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        shadowUrl: markerShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+    case "parque":
+      return new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+        shadowUrl: markerShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+    case "peluqueria":
+      return new L.Icon({
+        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+        shadowUrl: markerShadow,
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41],
+      });
+    default:
+      return new L.Icon.Default();
   }
+};
 
+export default function Map({ markers, center, zoom, setCenter }: MapProps) {
   return (
-    <MapContainer center={center} zoom={12} style={{ width: "100%", height: "400px", marginBottom: "16px" }}>
+    <MapContainer
+      center={center}
+      zoom={zoom}
+      style={{ width: "100%", height: "400px", borderRadius: 12, marginBottom: 16 }}
+    >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
       />
-      {markers.map((m: any, i: number) => (
-        <Marker key={i} position={m} />
+      {markers.map((m, i) => (
+        <Marker key={i} position={m.position} icon={getIcon(m.type)}>
+          <Popup>{m.name}</Popup>
+        </Marker>
       ))}
-      <ClickHandler />
+      <MapEvents setCenter={setCenter} />
     </MapContainer>
   );
 }
