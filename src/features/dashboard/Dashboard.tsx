@@ -58,7 +58,7 @@ export default function Dashboard() {
   const [places, setPlaces] = useState<Place[]>([]);
   const [filters, setFilters] = useState<Place["type"][]>([]);
   const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 40.4168, lng: -3.7038 });
-  const [zoom, setZoom] = useState(12);
+  const [zoom] = useState(12);
   const [loading, setLoading] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
