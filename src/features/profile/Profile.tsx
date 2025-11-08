@@ -100,7 +100,7 @@ export default function Profile() {
         userId: user.uid,
         name: petName,
         type: petType,
-        birthdate: petBirthdate, // guardamos fecha en Firebase
+        dob: petBirthdate, // guardamos fecha en Firebase
       });
 
       alert("Mascota añadida!");
