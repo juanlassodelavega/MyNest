@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from "react";
 import { auth, db } from "../../firebase";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy } from "firebase/firestore";
 import Map from "../../components/Map";
 import type { MarkerData } from "../../components/Map";
 
 interface Pet {
+  id: string;
   name: string;
   type: string;
   dob: string;
@@ -15,6 +16,13 @@ interface Place {
   name: string;
   type: MarkerData["type"];
   position: { lat: number; lng: number };
+}
+
+interface Reminder {
+  id: string;
+  type: string;
+  date: string;
+  notes?: string;
 }
 
 // Filtros
@@ -62,6 +70,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [remindersMap, setRemindersMap] = useState<{ [petId: string]: Reminder[] }>({});
+  const [newReminderMap, setNewReminderMap] = useState<{ [petId: string]: { type: string; date: string; notes: string } }>({});
 
   // Ubicación inicial
   useEffect(() => {
@@ -71,7 +81,7 @@ export default function Dashboard() {
     );
   }, []);
 
-  // Cargar mascotas
+  // Cargar mascotas y sus recordatorios
   useEffect(() => {
     const fetchPets = async () => {
       if (!auth.currentUser) return;
@@ -80,8 +90,24 @@ export default function Dashboard() {
         const q = query(petsRef, where("userId", "==", auth.currentUser.uid));
         const querySnapshot = await getDocs(q);
         const petsData: Pet[] = [];
-        querySnapshot.forEach((doc) => petsData.push(doc.data() as Pet));
+        const tempRemindersMap: { [petId: string]: Reminder[] } = {};
+
+        for (const docSnap of querySnapshot.docs) {
+          const petData = { id: docSnap.id, ...(docSnap.data() as Omit<Pet, "id">) };
+          petsData.push(petData);
+
+          // Cargar recordatorios de cada mascota
+          const remindersRef = collection(db, "pets", docSnap.id, "reminders");
+          const remindersSnapshot = await getDocs(query(remindersRef, orderBy("date", "asc")));
+          const reminders: Reminder[] = remindersSnapshot.docs.map(rDoc => ({
+            id: rDoc.id,
+            ...(rDoc.data() as Omit<Reminder, "id">)
+          }));
+          tempRemindersMap[docSnap.id] = reminders;
+        }
+
         setPets(petsData);
+        setRemindersMap(tempRemindersMap);
       } catch (error) {
         console.error("Error al obtener mascotas:", error);
       }
@@ -149,6 +175,35 @@ export default function Dashboard() {
     return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
   };
 
+  const handleAddReminder = async (petId: string) => {
+    const newReminder = newReminderMap[petId];
+    if (!newReminder?.type || !newReminder.date) return;
+
+    try {
+      const remindersRef = collection(db, "pets", petId, "reminders");
+      const docRef = await addDoc(remindersRef, newReminder);
+      setRemindersMap(prev => ({
+        ...prev,
+        [petId]: [...(prev[petId] || []), { id: docRef.id, ...newReminder }]
+      }));
+      setNewReminderMap(prev => ({ ...prev, [petId]: { type: "", date: "", notes: "" } }));
+    } catch (error) {
+      console.error("Error al añadir recordatorio:", error);
+    }
+  };
+
+  const handleDeleteReminder = async (petId: string, reminderId: string) => {
+    try {
+      await deleteDoc(doc(db, "pets", petId, "reminders", reminderId));
+      setRemindersMap(prev => ({
+        ...prev,
+        [petId]: prev[petId].filter(r => r.id !== reminderId)
+      }));
+    } catch (error) {
+      console.error("Error al borrar recordatorio:", error);
+    }
+  };
+
   // ---------- Estilos ----------
   const pageStyle: React.CSSProperties = {
     minHeight: "100vh",
@@ -211,13 +266,36 @@ export default function Dashboard() {
   const petListStyle: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0 };
   const petItemStyle: React.CSSProperties = {
     padding: "12px 16px",
-    marginBottom: 8,
+    marginBottom: 16,
     borderRadius: 8,
     backgroundColor: "#3a3a5a",
     display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
+    flexDirection: "column",
+    gap: 8,
   };
+  const reminderStyle: React.CSSProperties = {
+    display: "flex",
+    justifyContent: "space-between",
+    backgroundColor: "#4a4a6a",
+    padding: "4px 8px",
+    borderRadius: 6,
+    marginBottom: 4,
+  };
+  const inputStyle: React.CSSProperties = {
+    padding: 6,
+    borderRadius: 6,
+    border: "1px solid #555",
+    backgroundColor: "#1a1a2b",
+    color: "#fff",
+    marginRight: 4,
+  };
+  const addButtonStyle: React.CSSProperties = {
+    cursor: "pointer",
+    color: "#4CAF50",
+    fontWeight: "bold",
+    marginTop: 4,
+  };
+  // ---------- Fin estilos ----------
 
   return (
     <div style={pageStyle}>
@@ -250,13 +328,74 @@ export default function Dashboard() {
             <p>No tienes mascotas añadidas aún.</p>
           ) : (
             <ul style={petListStyle}>
-              {pets.map((pet, i) => (
-                <li key={i} style={petItemStyle}>
+              {pets.map((pet) => (
+                <li key={pet.id} style={petItemStyle}>
                   <div>
                     <strong>{pet.name}</strong> - {pet.type}
                   </div>
                   <div>
                     {calculateAge(pet.dob)} años - {new Date(pet.dob).toLocaleDateString()}
+                  </div>
+
+                  {/* Recordatorios */}
+                  <div>
+                    <strong>Recordatorios:</strong>
+                    {(remindersMap[pet.id] || []).map((r) => (
+                      <div key={r.id} style={reminderStyle}>
+                        <span>{r.type} — {r.date}</span>
+                        <span
+                          style={{ cursor: "pointer", color: "#ff5555" }}
+                          onClick={() => handleDeleteReminder(pet.id, r.id)}
+                        >
+                          🗑
+                        </span>
+                      </div>
+                    ))}
+
+                    {/* Añadir nuevo recordatorio */}
+                    <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
+                      <select
+                        style={inputStyle}
+                        value={newReminderMap[pet.id]?.type || ""}
+                        onChange={(e) =>
+                          setNewReminderMap(prev => ({
+                            ...prev,
+                            [pet.id]: { ...prev[pet.id], type: e.target.value }
+                          }))
+                        }
+                      >
+                        <option value="">Tipo</option>
+                        <option value="Rabia">Rabia</option>
+                        <option value="Desparasitación">Desparasitación</option>
+                        <option value="Polivalente">Polivalente</option>
+                        <option value="Moquillo">Moquillo</option>
+                        <option value="Otro">Otro</option>
+                      </select>
+                      <input
+                        type="date"
+                        style={inputStyle}
+                        value={newReminderMap[pet.id]?.date || ""}
+                        onChange={(e) =>
+                          setNewReminderMap(prev => ({
+                            ...prev,
+                            [pet.id]: { ...prev[pet.id], date: e.target.value }
+                          }))
+                        }
+                      />
+                      <input
+                        type="text"
+                        placeholder="Notas"
+                        style={{ ...inputStyle, flex: 1 }}
+                        value={newReminderMap[pet.id]?.notes || ""}
+                        onChange={(e) =>
+                          setNewReminderMap(prev => ({
+                            ...prev,
+                            [pet.id]: { ...prev[pet.id], notes: e.target.value }
+                          }))
+                        }
+                      />
+                      <span style={addButtonStyle} onClick={() => handleAddReminder(pet.id)}>➕ Añadir</span>
+                    </div>
                   </div>
                 </li>
               ))}
