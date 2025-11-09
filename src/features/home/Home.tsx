@@ -1,4 +1,18 @@
+import { useEffect } from "react";
+import { useAuthState } from "react-firebase-hooks/auth";
+import { useNavigate } from "react-router-dom";
+import { auth } from "../../firebase";
+
 export default function Home() {
+  const [user, loading] = useAuthState(auth);
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && user) {
+      navigate("/dashboard");
+    }
+  }, [user, loading, navigate]);
+
   // ---------- Estilos ----------
   const pageStyle: React.CSSProperties = {
     minHeight: "100vh",

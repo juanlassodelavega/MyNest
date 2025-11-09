@@ -1,7 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { useAuthState } from "react-firebase-hooks/auth";
 import { auth } from "../firebase";
-import { FiLogIn, FiLogOut, FiUser, FiHome } from "react-icons/fi";
+import { FiLogIn, FiLogOut, FiEdit, FiHome, FiGrid } from "react-icons/fi";
 
 export default function Header() {
   const [user] = useAuthState(auth);
@@ -13,7 +13,7 @@ export default function Header() {
   };
 
   // Estilo común para iconos
-  const iconStyle = { fontSize: "1.5rem", display: "flex", alignItems: "center" };
+  const iconStyle = { fontSize: "1.5rem", display: "flex", alignItems: "center", color: "white" };
 
   return (
     <header
@@ -24,19 +24,19 @@ export default function Header() {
         padding: "0 32px",
         backgroundColor: "#1a1a1a",
         color: "white",
-        height: 64, // <-- Altura fija
+        height: 64,
         boxSizing: "border-box",
         width: "100%",
       }}
     >
-      {/* Logo / Home */}
+      {/* Logo / Home o Dashboard */}
       <div style={{ flex: "0 0 auto", display: "flex", alignItems: "center" }}>
-        <Link to={user ? "/dashboard" : "/"} style={{ color: "white", ...iconStyle }}>
-          <FiHome />
+        <Link to={user ? "/dashboard" : "/"} style={iconStyle}>
+          {user ? <FiGrid /> : <FiHome />}
         </Link>
       </div>
 
-      {/* Centro vacío para mantener espacio */}
+      {/* Centro vacío */}
       <div style={{ flex: "1 1 auto" }} />
 
       {/* Zona derecha */}
@@ -46,25 +46,25 @@ export default function Header() {
           display: "flex",
           gap: 16,
           alignItems: "center",
-          height: "100%", // asegura que todo esté centrado verticalmente
+          height: "100%",
         }}
       >
         {!user && (
-          <Link to="/login" style={{ color: "white", ...iconStyle }}>
+          <Link to="/login" style={iconStyle}>
             <FiLogIn />
           </Link>
         )}
         {user && (
           <>
-            <Link to="/profile" style={{ color: "white", ...iconStyle }}>
-              <FiUser />
+            {/* Editar en lugar de Perfil */}
+            <Link to="/profile" style={iconStyle}>
+              <FiEdit />
             </Link>
             <button
               onClick={handleLogout}
               style={{
                 background: "transparent",
                 border: "none",
-                color: "white",
                 cursor: "pointer",
                 ...iconStyle,
               }}
