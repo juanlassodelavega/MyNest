@@ -34,7 +34,9 @@ export default function Profile() {
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState(""); // confirmación
 
+  // ---------- Load user and pets ----------
   useEffect(() => {
     const fetchUserData = async () => {
       if (!user) return;
@@ -121,39 +123,53 @@ export default function Profile() {
   };
 
   const handleChangePassword = async () => {
-    if (!user || !currentPassword || !newPassword) { alert("Completa ambos campos"); return; }
+    if (!currentPassword || !newPassword || !confirmNewPassword) {
+      alert("Completa todos los campos");
+      return;
+    }
+    if (newPassword !== confirmNewPassword) {
+      alert("Las nuevas contraseñas no coinciden");
+      return;
+    }
+    if (!user) return;
+
     try {
       const credential = EmailAuthProvider.credential(user.email!, currentPassword);
       await reauthenticateWithCredential(user, credential);
       await updatePassword(user, newPassword);
-      alert("Contraseña cambiada!");
-      setCurrentPassword(""); setNewPassword("");
-    } catch (error) { console.error("Error al cambiar contraseña:", error); alert("Error cambiando contraseña"); }
+      alert("Contraseña cambiada correctamente!");
+      setCurrentPassword(""); setNewPassword(""); setConfirmNewPassword("");
+    } catch (error) {
+      console.error("Error al cambiar contraseña:", error);
+      alert("Error cambiando contraseña");
+    }
   };
 
   const handleDeleteAccount = async () => {
     if (!user) return;
     if (!window.confirm("¿Seguro que quieres borrar tu cuenta? Esto eliminará todos tus datos.")) return;
     try {
-      // borrar pets del usuario
       const petsRef = collection(db, "pets");
       const q = query(petsRef, where("userId", "==", user.uid));
       const snapshot = await getDocs(q);
       const batchDeletes = snapshot.docs.map(docSnap => deleteDoc(doc(db, "pets", docSnap.id)));
       await Promise.all(batchDeletes);
-      // borrar usuario Firestore
       await deleteDoc(doc(db, "users", user.uid));
-      // borrar cuenta Firebase Auth
       await deleteUser(user);
       alert("Cuenta eliminada");
     } catch (error) { console.error("Error al borrar cuenta:", error); alert("Error eliminando cuenta"); }
   };
 
-  const calculateAge = (dob: string) => { const birthDate = new Date(dob); const diffMs = Date.now() - birthDate.getTime(); return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000)); };
+  const calculateAge = (dob: string) => {
+    const birthDate = new Date(dob);
+    const diffMs = Date.now() - birthDate.getTime();
+    return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
+  };
 
   if (!user) return <p style={{ textAlign: "center", marginTop: 50 }}>No estás logueado.</p>;
   if (!userData) return <p style={{ textAlign: "center", marginTop: 50 }}>Cargando perfil...</p>;
 
+  // ---------- Estilos ----------
   const pageStyle: React.CSSProperties = { minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", padding: 16, backgroundColor: "#1e1e2f", color: "#fff", boxSizing: "border-box" };
   const containerStyle: React.CSSProperties = { width: "100%", maxWidth: 700, display: "flex", flexDirection: "column", padding: 24, borderRadius: 12, backgroundColor: "#2a2a3d", boxShadow: "0 4px 12px rgba(0,0,0,0.3)", marginBottom: 24 };
   const titleStyle: React.CSSProperties = { marginBottom: 24, textAlign: "center" };
@@ -198,6 +214,7 @@ export default function Profile() {
         <h2 style={sectionTitleStyle}>Cambiar Contraseña</h2>
         <input type="password" placeholder="Contraseña actual" value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} style={inputStyle} />
         <input type="password" placeholder="Nueva contraseña" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} style={inputStyle} />
+        <input type="password" placeholder="Confirmar nueva contraseña" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} style={inputStyle} />
         <button style={buttonStyle} onClick={handleChangePassword}>Cambiar Contraseña</button>
 
         {/* Borrar cuenta */}
