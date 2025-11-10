@@ -1,47 +1,37 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../../firebase";
 import { useNavigate, Link } from "react-router-dom";
+import { useAuthState } from "react-firebase-hooks/auth";
 
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const [user] = useAuthState(auth);
+
+  useEffect(() => {
+    if (user) navigate("/dashboard");
+  }, [user, navigate]);
 
   const handleLogin = async () => {
+    setErrorMessage("");
+
+    if (!email || !password) {
+      setErrorMessage("Por favor completa todos los campos.");
+      return;
+    }
+
     try {
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/dashboard");
     } catch (error: any) {
-      alert(error.message);
+      setErrorMessage("Credenciales inválidas. Intenta nuevamente.");
     }
   };
 
-  // ---------- Estilos ----------
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#1e1e2f",
-    boxSizing: "border-box",
-  };
-
-  const containerStyle: React.CSSProperties = {
-    width: "100%",
-    maxWidth: 500,
-    padding: 40,
-    borderRadius: 12,
-    backgroundColor: "#2a2a3d",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-    color: "#fff",
-    display: "flex",
-    flexDirection: "column",
-    gap: 16,
-  };
-
-  const inputStyle: React.CSSProperties = {
+  const inputStyle = {
     width: "100%",
     padding: 12,
     borderRadius: 8,
@@ -49,9 +39,9 @@ export default function Login() {
     backgroundColor: "#1a1a2b",
     color: "#fff",
     boxSizing: "border-box",
-  };
+  } as const;
 
-  const buttonStyle: React.CSSProperties = {
+  const buttonStyle = {
     width: "100%",
     padding: 12,
     backgroundColor: "#4CAF50",
@@ -61,35 +51,62 @@ export default function Login() {
     cursor: "pointer",
     fontWeight: 600,
     marginTop: 8,
-  };
-
-  const linkStyle: React.CSSProperties = {
-    color: "#2196F3",
-    textDecoration: "none",
-  };
-  // ---------- Fin estilos ----------
+  } as const;
 
   return (
-    <div style={pageStyle}>
-      <div style={containerStyle}>
-        <h1 style={{ textAlign: "center" }}>Login</h1>
+    <div
+      style={{
+        minHeight: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        padding: 16,
+        backgroundColor: "#1e1e2f",
+      }}
+    >
+      <div
+        style={{
+          width: "100%",
+          maxWidth: 500,
+          padding: 40,
+          borderRadius: 12,
+          backgroundColor: "#2a2a3d",
+          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+          color: "#fff",
+          display: "flex",
+          flexDirection: "column",
+          gap: 16,
+        }}
+      >
+        <h1 style={{ textAlign: "center" }}>Iniciar Sesión</h1>
+
+        {errorMessage && (
+          <p style={{ color: "#ff6b6b", textAlign: "center" }}>{errorMessage}</p>
+        )}
+
         <input
           type="email"
-          placeholder="Email"
+          placeholder="Correo electrónico"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={inputStyle}
         />
         <input
           type="password"
-          placeholder="Password"
+          placeholder="Contraseña"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
         />
-        <button onClick={handleLogin} style={buttonStyle}>Iniciar sesión</button>
+        <button onClick={handleLogin} style={buttonStyle}>
+          Iniciar sesión
+        </button>
+
         <p style={{ textAlign: "center", marginTop: 8 }}>
-          ¿No tienes cuenta? <Link to="/signup" style={linkStyle}>Regístrate</Link>
+          ¿No tienes cuenta?{" "}
+          <Link to="/signup" style={{ color: "#2196F3" }}>
+            Regístrate
+          </Link>
         </p>
       </div>
     </div>
