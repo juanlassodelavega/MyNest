@@ -81,7 +81,9 @@ export default function Login() {
         <h1 style={{ textAlign: "center" }}>Iniciar Sesión</h1>
 
         {errorMessage && (
-          <p style={{ color: "#ff6b6b", textAlign: "center" }}>{errorMessage}</p>
+          <p style={{ color: "#ff6b6b", textAlign: "center" }}>
+            {errorMessage}
+          </p>
         )}
 
         <input

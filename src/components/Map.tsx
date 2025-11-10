@@ -1,4 +1,10 @@
-import { MapContainer, TileLayer, Marker, Popup, useMapEvents } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  Popup,
+  useMapEvents,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import markerShadow from "leaflet/dist/images/marker-shadow.png";
@@ -36,7 +42,8 @@ const getIcon = (type: MarkerData["type"]) => {
   switch (type) {
     case "veterinario":
       return new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
         shadowUrl: markerShadow,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -45,7 +52,8 @@ const getIcon = (type: MarkerData["type"]) => {
       });
     case "tienda":
       return new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
         shadowUrl: markerShadow,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -54,7 +62,8 @@ const getIcon = (type: MarkerData["type"]) => {
       });
     case "parque":
       return new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
         shadowUrl: markerShadow,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -63,7 +72,8 @@ const getIcon = (type: MarkerData["type"]) => {
       });
     case "peluqueria":
       return new L.Icon({
-        iconUrl: "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+        iconUrl:
+          "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
         shadowUrl: markerShadow,
         iconSize: [25, 41],
         iconAnchor: [12, 41],
@@ -80,7 +90,12 @@ export default function Map({ markers, center, zoom, setCenter }: MapProps) {
     <MapContainer
       center={center}
       zoom={zoom}
-      style={{ width: "100%", height: "400px", borderRadius: 12, marginBottom: 16 }}
+      style={{
+        width: "100%",
+        height: "400px",
+        borderRadius: 12,
+        marginBottom: 16,
+      }}
     >
       <TileLayer
         url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"

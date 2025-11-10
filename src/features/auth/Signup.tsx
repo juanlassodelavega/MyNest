@@ -23,7 +23,14 @@ export default function Signup() {
   const handleSignup = async () => {
     setErrorMessage("");
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !dob) {
+    if (
+      !firstName ||
+      !lastName ||
+      !email ||
+      !password ||
+      !confirmPassword ||
+      !dob
+    ) {
       setErrorMessage("Por favor completa todos los campos.");
       return;
     }
@@ -44,7 +51,11 @@ export default function Signup() {
     }
 
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       const user = userCredential.user;
 
       await setDoc(doc(db, "users", user.uid), {
@@ -110,17 +121,56 @@ export default function Signup() {
         <h1 style={{ textAlign: "center" }}>Registro</h1>
 
         {errorMessage && (
-          <p style={{ color: "#ff6b6b", textAlign: "center" }}>{errorMessage}</p>
+          <p style={{ color: "#ff6b6b", textAlign: "center" }}>
+            {errorMessage}
+          </p>
         )}
 
-        <input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
-        <input type="text" placeholder="Apellidos" value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
-        <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={inputStyle} />
-        <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
-        <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
-        <input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} />
+        <input
+          type="text"
+          placeholder="Nombre"
+          value={firstName}
+          onChange={(e) => setFirstName(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="text"
+          placeholder="Apellidos"
+          value={lastName}
+          onChange={(e) => setLastName(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="date"
+          value={dob}
+          onChange={(e) => setDob(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="email"
+          placeholder="Correo electrónico"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="password"
+          placeholder="Contraseña"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          style={inputStyle}
+        />
+        <input
+          type="password"
+          placeholder="Confirmar contraseña"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          style={inputStyle}
+        />
 
-        <button onClick={handleSignup} style={buttonStyle}>Registrarse</button>
+        <button onClick={handleSignup} style={buttonStyle}>
+          Registrarse
+        </button>
 
         <p style={{ textAlign: "center", marginTop: 8 }}>
           ¿Ya tienes cuenta?{" "}

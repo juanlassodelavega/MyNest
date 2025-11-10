@@ -11,7 +11,9 @@ import PrivateRoute from "../components/PrivateRoute";
 export default function AppRoutes() {
   return (
     <BrowserRouter>
-      <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
+      <div
+        style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}
+      >
         <Header />
         <main style={{ flex: 1 }}>
           <Routes>

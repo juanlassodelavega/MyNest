@@ -24,8 +24,12 @@ export default function Footer() {
   return (
     <footer style={footerStyle}>
       <div style={textStyle}>
-        <span>💡 Ideado por <strong>Miguel Lasso de la Vega</strong></span>
-        <span>👨‍💻 Desarrollado por <strong>Juan Lasso de la Vega</strong></span>
+        <span>
+          💡 Ideado por <strong>Miguel Lasso de la Vega</strong>
+        </span>
+        <span>
+          👨‍💻 Desarrollado por <strong>Juan Lasso de la Vega</strong>
+        </span>
       </div>
       <div style={textStyle}>
         <span>© {year} MyNest</span>

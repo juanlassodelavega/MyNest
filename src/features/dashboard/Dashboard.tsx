@@ -1,6 +1,15 @@
 import { useEffect, useState, useRef } from "react";
 import { auth, db } from "../../firebase";
-import { collection, query, where, getDocs, addDoc, deleteDoc, doc, orderBy } from "firebase/firestore";
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  addDoc,
+  deleteDoc,
+  doc,
+  orderBy,
+} from "firebase/firestore";
 import Map from "../../components/Map";
 import type { MarkerData } from "../../components/Map";
 
@@ -63,14 +72,21 @@ export default function Dashboard() {
   const [pets, setPets] = useState<Pet[]>([]);
   const [places, setPlaces] = useState<Place[]>([]);
   const [filters, setFilters] = useState<Place["type"][]>([]);
-  const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 40.4168, lng: -3.7038 });
+  const [center, setCenter] = useState<{ lat: number; lng: number }>({
+    lat: 40.4168,
+    lng: -3.7038,
+  });
   const [zoom] = useState(12);
   const [loading, setLoading] = useState(false);
   const [mapHeight, setMapHeight] = useState(400); // altura del mapa
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const [remindersMap, setRemindersMap] = useState<{ [petId: string]: Reminder[] }>({});
-  const [newReminderMap, setNewReminderMap] = useState<{ [petId: string]: { type: string; date: string; notes: string } }>({});
+  const [remindersMap, setRemindersMap] = useState<{
+    [petId: string]: Reminder[];
+  }>({});
+  const [newReminderMap, setNewReminderMap] = useState<{
+    [petId: string]: { type: string; date: string; notes: string };
+  }>({});
 
   // Ajustar altura del mapa según ancho de pantalla
   useEffect(() => {
@@ -89,7 +105,8 @@ export default function Dashboard() {
   // Ubicación inicial
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
-      (pos) => setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) =>
+        setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
       () => console.log("Ubicación no disponible, usando Madrid por defecto")
     );
   }, []);
@@ -106,14 +123,19 @@ export default function Dashboard() {
         const tempRemindersMap: { [petId: string]: Reminder[] } = {};
 
         for (const docSnap of querySnapshot.docs) {
-          const petData = { id: docSnap.id, ...(docSnap.data() as Omit<Pet, "id">) };
+          const petData = {
+            id: docSnap.id,
+            ...(docSnap.data() as Omit<Pet, "id">),
+          };
           petsData.push(petData);
 
           const remindersRef = collection(db, "pets", docSnap.id, "reminders");
-          const remindersSnapshot = await getDocs(query(remindersRef, orderBy("date", "asc")));
-          const reminders: Reminder[] = remindersSnapshot.docs.map(rDoc => ({
+          const remindersSnapshot = await getDocs(
+            query(remindersRef, orderBy("date", "asc"))
+          );
+          const reminders: Reminder[] = remindersSnapshot.docs.map((rDoc) => ({
             id: rDoc.id,
-            ...(rDoc.data() as Omit<Reminder, "id">)
+            ...(rDoc.data() as Omit<Reminder, "id">),
           }));
           tempRemindersMap[docSnap.id] = reminders;
         }
@@ -145,8 +167,16 @@ export default function Dashboard() {
         const lonMin = center.lng - 0.05;
         const lonMax = center.lng + 0.05;
 
-        const overpassQuery = getOverpassQuery(type, latMin, lonMin, latMax, lonMax);
-        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
+        const overpassQuery = getOverpassQuery(
+          type,
+          latMin,
+          lonMin,
+          latMax,
+          lonMax
+        );
+        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(
+          overpassQuery
+        )}`;
 
         try {
           const res = await fetch(url);
@@ -194,11 +224,14 @@ export default function Dashboard() {
     try {
       const remindersRef = collection(db, "pets", petId, "reminders");
       const docRef = await addDoc(remindersRef, newReminder);
-      setRemindersMap(prev => ({
+      setRemindersMap((prev) => ({
         ...prev,
-        [petId]: [...(prev[petId] || []), { id: docRef.id, ...newReminder }]
+        [petId]: [...(prev[petId] || []), { id: docRef.id, ...newReminder }],
       }));
-      setNewReminderMap(prev => ({ ...prev, [petId]: { type: "", date: "", notes: "" } }));
+      setNewReminderMap((prev) => ({
+        ...prev,
+        [petId]: { type: "", date: "", notes: "" },
+      }));
     } catch (error) {
       console.error("Error al añadir recordatorio:", error);
     }
@@ -207,9 +240,9 @@ export default function Dashboard() {
   const handleDeleteReminder = async (petId: string, reminderId: string) => {
     try {
       await deleteDoc(doc(db, "pets", petId, "reminders", reminderId));
-      setRemindersMap(prev => ({
+      setRemindersMap((prev) => ({
         ...prev,
-        [petId]: prev[petId].filter(r => r.id !== reminderId)
+        [petId]: prev[petId].filter((r) => r.id !== reminderId),
       }));
     } catch (error) {
       console.error("Error al borrar recordatorio:", error);
@@ -280,7 +313,11 @@ export default function Dashboard() {
     overflowY: "auto",
     paddingRight: 4,
   };
-  const petListStyle: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0 };
+  const petListStyle: React.CSSProperties = {
+    listStyle: "none",
+    padding: 0,
+    margin: 0,
+  };
   const petItemStyle: React.CSSProperties = {
     padding: "12px 16px",
     marginBottom: 16,
@@ -341,7 +378,12 @@ export default function Dashboard() {
 
         <div style={mapStyle}>
           {loading && <div style={spinnerStyle}></div>}
-          <Map markers={places} center={center} zoom={zoom} setCenter={setCenter} />
+          <Map
+            markers={places}
+            center={center}
+            zoom={zoom}
+            setCenter={setCenter}
+          />
         </div>
 
         <div style={petListContainerStyle}>
@@ -358,7 +400,8 @@ export default function Dashboard() {
                       <strong>{pet.name}</strong> - {pet.type}
                     </div>
                     <div>
-                      {calculateAge(pet.dob)} años - {new Date(pet.dob).toLocaleDateString()}
+                      {calculateAge(pet.dob)} años -{" "}
+                      {new Date(pet.dob).toLocaleDateString()}
                     </div>
 
                     <div>
@@ -366,7 +409,9 @@ export default function Dashboard() {
                       <div style={reminderListStyle(reminderCount)}>
                         {(remindersMap[pet.id] || []).map((r) => (
                           <div key={r.id} style={reminderStyle}>
-                            <span>{r.type} — {r.date}</span>
+                            <span>
+                              {r.type} — {r.date}
+                            </span>
                             <span
                               style={{ cursor: "pointer", color: "#ff5555" }}
                               onClick={() => handleDeleteReminder(pet.id, r.id)}
@@ -380,7 +425,8 @@ export default function Dashboard() {
                       <div
                         style={{
                           display: "grid",
-                          gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                          gridTemplateColumns:
+                            "repeat(auto-fill, minmax(120px, 1fr))",
                           gap: 4,
                           marginTop: 4,
                           alignItems: "center",
@@ -390,15 +436,20 @@ export default function Dashboard() {
                           style={{ ...inputStyle }}
                           value={newReminderMap[pet.id]?.type || ""}
                           onChange={(e) =>
-                            setNewReminderMap(prev => ({
+                            setNewReminderMap((prev) => ({
                               ...prev,
-                              [pet.id]: { ...prev[pet.id], type: e.target.value }
+                              [pet.id]: {
+                                ...prev[pet.id],
+                                type: e.target.value,
+                              },
                             }))
                           }
                         >
                           <option value="">Tipo</option>
                           <option value="Rabia">Rabia</option>
-                          <option value="Desparasitación">Desparasitación</option>
+                          <option value="Desparasitación">
+                            Desparasitación
+                          </option>
                           <option value="Polivalente">Polivalente</option>
                           <option value="Moquillo">Moquillo</option>
                           <option value="Otro">Otro</option>
@@ -408,9 +459,12 @@ export default function Dashboard() {
                           style={inputStyle}
                           value={newReminderMap[pet.id]?.date || ""}
                           onChange={(e) =>
-                            setNewReminderMap(prev => ({
+                            setNewReminderMap((prev) => ({
                               ...prev,
-                              [pet.id]: { ...prev[pet.id], date: e.target.value }
+                              [pet.id]: {
+                                ...prev[pet.id],
+                                date: e.target.value,
+                              },
                             }))
                           }
                         />
@@ -420,13 +474,19 @@ export default function Dashboard() {
                           style={inputStyle}
                           value={newReminderMap[pet.id]?.notes || ""}
                           onChange={(e) =>
-                            setNewReminderMap(prev => ({
+                            setNewReminderMap((prev) => ({
                               ...prev,
-                              [pet.id]: { ...prev[pet.id], notes: e.target.value }
+                              [pet.id]: {
+                                ...prev[pet.id],
+                                notes: e.target.value,
+                              },
                             }))
                           }
                         />
-                        <span style={addButtonStyle} onClick={() => handleAddReminder(pet.id)}>
+                        <span
+                          style={addButtonStyle}
+                          onClick={() => handleAddReminder(pet.id)}
+                        >
                           ➕ Añadir
                         </span>
                       </div>

@@ -150,7 +150,8 @@ export default function Home() {
 
         <h1 style={headingStyle}>🐾 Bienvenido a MyNest 🐾</h1>
         <p style={textStyle}>
-          La red social para dueños de mascotas. Añade tus mascotas, gestiona recordatorios y descubre lugares amigables para ellas cerca de ti.
+          La red social para dueños de mascotas. Añade tus mascotas, gestiona
+          recordatorios y descubre lugares amigables para ellas cerca de ti.
         </p>
 
         <div style={buttonContainerStyle}>

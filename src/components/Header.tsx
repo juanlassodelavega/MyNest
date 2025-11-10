@@ -13,7 +13,12 @@ export default function Header() {
   };
 
   // Estilo común para iconos
-  const iconStyle = { fontSize: "1.5rem", display: "flex", alignItems: "center", color: "white" };
+  const iconStyle = {
+    fontSize: "1.5rem",
+    display: "flex",
+    alignItems: "center",
+    color: "white",
+  };
 
   return (
     <header
