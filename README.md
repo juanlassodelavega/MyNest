@@ -66,14 +66,6 @@ src/
 
 ---
 
-## 🎯 Próximos pasos
-
-- Guardar mascotas en Firebase Firestore para persistencia.  
-- Perfil de usuario con foto y detalles de mascotas.  
-- Funcionalidades sociales: comentar o dar “me gusta” a mascotas de otros usuarios.  
-
----
-
 ## ⚡ Autores
 
 Juan Lasso de la Vega – [GitHub](https://github.com/juanlassodelavega)
