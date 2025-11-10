@@ -25,7 +25,6 @@ interface Reminder {
   notes?: string;
 }
 
-// Filtros
 const PLACE_OPTIONS: { label: string; value: Place["type"] }[] = [
   { label: "Veterinarios", value: "veterinario" },
   { label: "Tiendas de mascotas", value: "tienda" },
@@ -33,7 +32,6 @@ const PLACE_OPTIONS: { label: string; value: Place["type"] }[] = [
   { label: "Peluquería canina", value: "peluqueria" },
 ];
 
-// Función para generar query Overpass por tipo
 const getOverpassQuery = (
   type: Place["type"],
   latMin: number,
@@ -68,10 +66,25 @@ export default function Dashboard() {
   const [center, setCenter] = useState<{ lat: number; lng: number }>({ lat: 40.4168, lng: -3.7038 });
   const [zoom] = useState(12);
   const [loading, setLoading] = useState(false);
+  const [mapHeight, setMapHeight] = useState(400); // altura del mapa
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [remindersMap, setRemindersMap] = useState<{ [petId: string]: Reminder[] }>({});
   const [newReminderMap, setNewReminderMap] = useState<{ [petId: string]: { type: string; date: string; notes: string } }>({});
+
+  // Ajustar altura del mapa según ancho de pantalla
+  useEffect(() => {
+    const updateMapHeight = () => {
+      if (window.innerWidth < 600) {
+        setMapHeight(window.innerHeight * 0.4);
+      } else {
+        setMapHeight(400);
+      }
+    };
+    updateMapHeight();
+    window.addEventListener("resize", updateMapHeight);
+    return () => window.removeEventListener("resize", updateMapHeight);
+  }, []);
 
   // Ubicación inicial
   useEffect(() => {
@@ -81,7 +94,7 @@ export default function Dashboard() {
     );
   }, []);
 
-  // Cargar mascotas y sus recordatorios
+  // Cargar mascotas y recordatorios
   useEffect(() => {
     const fetchPets = async () => {
       if (!auth.currentUser) return;
@@ -96,7 +109,6 @@ export default function Dashboard() {
           const petData = { id: docSnap.id, ...(docSnap.data() as Omit<Pet, "id">) };
           petsData.push(petData);
 
-          // Cargar recordatorios de cada mascota
           const remindersRef = collection(db, "pets", docSnap.id, "reminders");
           const remindersSnapshot = await getDocs(query(remindersRef, orderBy("date", "asc")));
           const reminders: Reminder[] = remindersSnapshot.docs.map(rDoc => ({
@@ -228,11 +240,11 @@ export default function Dashboard() {
   };
   const mapStyle: React.CSSProperties = {
     width: "100%",
-    height: 400,
     borderRadius: 12,
     overflow: "hidden",
     marginBottom: 16,
     position: "relative",
+    height: mapHeight,
   };
   const spinnerStyle: React.CSSProperties = {
     position: "absolute",
@@ -263,6 +275,11 @@ export default function Dashboard() {
     borderRadius: 6,
     cursor: "pointer",
   };
+  const petListContainerStyle: React.CSSProperties = {
+    maxHeight: "60vh",
+    overflowY: "auto",
+    paddingRight: 4,
+  };
   const petListStyle: React.CSSProperties = { listStyle: "none", padding: 0, margin: 0 };
   const petItemStyle: React.CSSProperties = {
     padding: "12px 16px",
@@ -273,6 +290,12 @@ export default function Dashboard() {
     flexDirection: "column",
     gap: 8,
   };
+  const reminderListStyle = (count: number): React.CSSProperties => ({
+    maxHeight: count > 4 ? 150 : "auto",
+    overflowY: count > 4 ? "auto" : "visible",
+    marginTop: 4,
+    paddingRight: 4,
+  });
   const reminderStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "space-between",
@@ -280,6 +303,8 @@ export default function Dashboard() {
     padding: "4px 8px",
     borderRadius: 6,
     marginBottom: 4,
+    flexWrap: "wrap",
+    gap: 4,
   };
   const inputStyle: React.CSSProperties = {
     padding: 6,
@@ -287,21 +312,20 @@ export default function Dashboard() {
     border: "1px solid #555",
     backgroundColor: "#1a1a2b",
     color: "#fff",
-    marginRight: 4,
+    width: "100%",
+    boxSizing: "border-box",
   };
   const addButtonStyle: React.CSSProperties = {
     cursor: "pointer",
     color: "#4CAF50",
     fontWeight: "bold",
-    marginTop: 4,
+    whiteSpace: "nowrap",
   };
-  // ---------- Fin estilos ----------
 
   return (
     <div style={pageStyle}>
       <h1 style={{ marginBottom: 24 }}>Mi Dashboard</h1>
       <div style={containerStyle}>
-        {/* Filtros */}
         <div style={checkboxContainerStyle}>
           {PLACE_OPTIONS.map((option) => (
             <label key={option.value} style={checkboxLabelStyle}>
@@ -315,90 +339,101 @@ export default function Dashboard() {
           ))}
         </div>
 
-        {/* Mapa */}
         <div style={mapStyle}>
           {loading && <div style={spinnerStyle}></div>}
           <Map markers={places} center={center} zoom={zoom} setCenter={setCenter} />
         </div>
 
-        {/* Lista de mascotas */}
-        <div>
+        <div style={petListContainerStyle}>
           <h2 style={{ marginBottom: 16 }}>Mis Mascotas</h2>
           {pets.length === 0 ? (
             <p>No tienes mascotas añadidas aún.</p>
           ) : (
             <ul style={petListStyle}>
-              {pets.map((pet) => (
-                <li key={pet.id} style={petItemStyle}>
-                  <div>
-                    <strong>{pet.name}</strong> - {pet.type}
-                  </div>
-                  <div>
-                    {calculateAge(pet.dob)} años - {new Date(pet.dob).toLocaleDateString()}
-                  </div>
+              {pets.map((pet) => {
+                const reminderCount = remindersMap[pet.id]?.length || 0;
+                return (
+                  <li key={pet.id} style={petItemStyle}>
+                    <div>
+                      <strong>{pet.name}</strong> - {pet.type}
+                    </div>
+                    <div>
+                      {calculateAge(pet.dob)} años - {new Date(pet.dob).toLocaleDateString()}
+                    </div>
 
-                  {/* Recordatorios */}
-                  <div>
-                    <strong>Recordatorios:</strong>
-                    {(remindersMap[pet.id] || []).map((r) => (
-                      <div key={r.id} style={reminderStyle}>
-                        <span>{r.type} — {r.date}</span>
-                        <span
-                          style={{ cursor: "pointer", color: "#ff5555" }}
-                          onClick={() => handleDeleteReminder(pet.id, r.id)}
+                    <div>
+                      <strong>Recordatorios:</strong>
+                      <div style={reminderListStyle(reminderCount)}>
+                        {(remindersMap[pet.id] || []).map((r) => (
+                          <div key={r.id} style={reminderStyle}>
+                            <span>{r.type} — {r.date}</span>
+                            <span
+                              style={{ cursor: "pointer", color: "#ff5555" }}
+                              onClick={() => handleDeleteReminder(pet.id, r.id)}
+                            >
+                              🗑
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "repeat(auto-fill, minmax(120px, 1fr))",
+                          gap: 4,
+                          marginTop: 4,
+                          alignItems: "center",
+                        }}
+                      >
+                        <select
+                          style={{ ...inputStyle }}
+                          value={newReminderMap[pet.id]?.type || ""}
+                          onChange={(e) =>
+                            setNewReminderMap(prev => ({
+                              ...prev,
+                              [pet.id]: { ...prev[pet.id], type: e.target.value }
+                            }))
+                          }
                         >
-                          🗑
+                          <option value="">Tipo</option>
+                          <option value="Rabia">Rabia</option>
+                          <option value="Desparasitación">Desparasitación</option>
+                          <option value="Polivalente">Polivalente</option>
+                          <option value="Moquillo">Moquillo</option>
+                          <option value="Otro">Otro</option>
+                        </select>
+                        <input
+                          type="date"
+                          style={inputStyle}
+                          value={newReminderMap[pet.id]?.date || ""}
+                          onChange={(e) =>
+                            setNewReminderMap(prev => ({
+                              ...prev,
+                              [pet.id]: { ...prev[pet.id], date: e.target.value }
+                            }))
+                          }
+                        />
+                        <input
+                          type="text"
+                          placeholder="Notas"
+                          style={inputStyle}
+                          value={newReminderMap[pet.id]?.notes || ""}
+                          onChange={(e) =>
+                            setNewReminderMap(prev => ({
+                              ...prev,
+                              [pet.id]: { ...prev[pet.id], notes: e.target.value }
+                            }))
+                          }
+                        />
+                        <span style={addButtonStyle} onClick={() => handleAddReminder(pet.id)}>
+                          ➕ Añadir
                         </span>
                       </div>
-                    ))}
-
-                    {/* Añadir nuevo recordatorio */}
-                    <div style={{ display: "flex", gap: 4, alignItems: "center", marginTop: 4 }}>
-                      <select
-                        style={inputStyle}
-                        value={newReminderMap[pet.id]?.type || ""}
-                        onChange={(e) =>
-                          setNewReminderMap(prev => ({
-                            ...prev,
-                            [pet.id]: { ...prev[pet.id], type: e.target.value }
-                          }))
-                        }
-                      >
-                        <option value="">Tipo</option>
-                        <option value="Rabia">Rabia</option>
-                        <option value="Desparasitación">Desparasitación</option>
-                        <option value="Polivalente">Polivalente</option>
-                        <option value="Moquillo">Moquillo</option>
-                        <option value="Otro">Otro</option>
-                      </select>
-                      <input
-                        type="date"
-                        style={inputStyle}
-                        value={newReminderMap[pet.id]?.date || ""}
-                        onChange={(e) =>
-                          setNewReminderMap(prev => ({
-                            ...prev,
-                            [pet.id]: { ...prev[pet.id], date: e.target.value }
-                          }))
-                        }
-                      />
-                      <input
-                        type="text"
-                        placeholder="Notas"
-                        style={{ ...inputStyle, flex: 1 }}
-                        value={newReminderMap[pet.id]?.notes || ""}
-                        onChange={(e) =>
-                          setNewReminderMap(prev => ({
-                            ...prev,
-                            [pet.id]: { ...prev[pet.id], notes: e.target.value }
-                          }))
-                        }
-                      />
-                      <span style={addButtonStyle} onClick={() => handleAddReminder(pet.id)}>➕ Añadir</span>
                     </div>
-                  </div>
-                </li>
-              ))}
+                  </li>
+                );
+              })}
             </ul>
           )}
         </div>
