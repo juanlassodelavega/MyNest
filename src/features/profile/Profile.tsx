@@ -38,45 +38,45 @@ export default function Profile() {
   const [userData, setUserData] = useState<UserData | null>(null);
   const [pets, setPets] = useState<Pet[]>([]);
   const [editingPetId, setEditingPetId] = useState<string | null>(null);
-  const [petName, setPetName] = useState("");
-  const [petType, setPetType] = useState("");
-  const [petBirthdate, setPetBirthdate] = useState("");
-
+  const [petForm, setPetForm] = useState({ name: "", type: "", dob: "" });
   const [editingUser, setEditingUser] = useState(false);
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [dob, setDob] = useState("");
-
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-
+  const [userForm, setUserForm] = useState({
+    firstName: "",
+    lastName: "",
+    dob: "",
+  });
+  const [passwordForm, setPasswordForm] = useState({
+    current: "",
+    new: "",
+    confirm: "",
+  });
   const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
 
-  // ---------- Cargar datos ----------
+  // ---------- Fetch user & pets ----------
   useEffect(() => {
+    if (!user) return;
+
     const fetchUserData = async () => {
-      if (!user) return;
-      const docRef = doc(db, "users", user.uid);
-      const docSnap = await getDoc(docRef);
+      const docSnap = await getDoc(doc(db, "users", user.uid));
       if (docSnap.exists()) {
         const data = docSnap.data() as UserData;
         setUserData(data);
-        setFirstName(data.firstName);
-        setLastName(data.lastName);
-        setDob(data.dob);
+        setUserForm({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          dob: data.dob,
+        });
       }
     };
 
     const fetchPets = async () => {
-      if (!user) return;
-      const petsRef = collection(db, "pets");
-      const q = query(petsRef, where("userId", "==", user.uid));
+      const q = query(collection(db, "pets"), where("userId", "==", user.uid));
       const snapshot = await getDocs(q);
-      const petsData: Pet[] = [];
-      snapshot.forEach((doc) =>
-        petsData.push({ id: doc.id, ...(doc.data() as Pet) })
-      );
+      const petsData: Pet[] = snapshot.docs.map((d) => ({
+        id: d.id,
+        ...(d.data() as Pet),
+      }));
       setPets(petsData);
     };
 
@@ -84,115 +84,112 @@ export default function Profile() {
     fetchPets();
   }, [user]);
 
-  // ---------- Mascotas ----------
-  const handleAddPet = async () => {
-    if (!petName || !petType || !petBirthdate) {
-      alert("Completa todos los campos de la mascota");
-      return;
-    }
+  // ---------- Helpers ----------
+  const clearPetForm = () => setPetForm({ name: "", type: "", dob: "" });
+  const calculateAge = (dob: string) =>
+    Math.floor(
+      (Date.now() - new Date(dob).getTime()) / (365.25 * 24 * 60 * 60 * 1000)
+    );
+
+  const showMessage = (msg: string) => {
+    setMessage(msg);
+    setTimeout(() => setMessage(null), 3000);
+  };
+
+  // ---------- Pets ----------
+  const handleAddOrEditPet = async () => {
+    const { name, type, dob } = petForm;
+    if (!name || !type || !dob)
+      return showMessage("Completa todos los campos de la mascota");
     try {
-      const petsRef = collection(db, "pets");
-      const docRef = await addDoc(petsRef, {
-        userId: user!.uid,
-        name: petName,
-        type: petType,
-        dob: petBirthdate,
-      });
-      setPets([
-        ...pets,
-        { id: docRef.id, name: petName, type: petType, dob: petBirthdate },
-      ]);
-      setPetName("");
-      setPetType("");
-      setPetBirthdate("");
-      alert("Mascota añadida!");
+      setLoading(true);
+      if (editingPetId) {
+        const petRef = doc(db, "pets", editingPetId);
+        await updateDoc(petRef, { name, type, dob });
+        setPets(
+          pets.map((p) =>
+            p.id === editingPetId ? { ...p, name, type, dob } : p
+          )
+        );
+        showMessage("Mascota actualizada!");
+      } else {
+        const docRef = await addDoc(collection(db, "pets"), {
+          userId: user!.uid,
+          name,
+          type,
+          dob,
+        });
+        setPets([...pets, { id: docRef.id, name, type, dob }]);
+        showMessage("Mascota añadida!");
+      }
+      clearPetForm();
+      setEditingPetId(null);
     } catch (error) {
-      console.error("Error al añadir mascota:", error);
+      console.error(error);
+      showMessage("Error al guardar la mascota");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleDeletePet = async (id: string) => {
     if (!window.confirm("¿Seguro que quieres eliminar esta mascota?")) return;
     try {
+      setLoading(true);
       await deleteDoc(doc(db, "pets", id));
-      setPets(pets.filter((pet) => pet.id !== id));
+      setPets(pets.filter((p) => p.id !== id));
+      showMessage("Mascota eliminada");
     } catch (error) {
-      console.error("Error al borrar mascota:", error);
+      console.error(error);
+      showMessage("Error al eliminar mascota");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleEditPet = (pet: Pet) => {
     setEditingPetId(pet.id || null);
-    setPetName(pet.name);
-    setPetType(pet.type);
-    setPetBirthdate(pet.dob);
+    setPetForm({ name: pet.name, type: pet.type, dob: pet.dob });
   };
 
-  const handleSaveEditPet = async () => {
-    if (!editingPetId) return;
-    try {
-      const petRef = doc(db, "pets", editingPetId);
-      await updateDoc(petRef, {
-        name: petName,
-        type: petType,
-        dob: petBirthdate,
-      });
-      setPets(
-        pets.map((pet) =>
-          pet.id === editingPetId
-            ? { ...pet, name: petName, type: petType, dob: petBirthdate }
-            : pet
-        )
-      );
-      setEditingPetId(null);
-      setPetName("");
-      setPetType("");
-      setPetBirthdate("");
-      alert("Mascota actualizada!");
-    } catch (error) {
-      console.error("Error al actualizar mascota:", error);
-    }
-  };
-
-  // ---------- Usuario ----------
+  // ---------- User ----------
   const handleSaveUser = async () => {
     if (!user) return;
     try {
+      setLoading(true);
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { firstName, lastName, dob });
-      setUserData({ ...userData!, firstName, lastName, dob });
+      await updateDoc(userRef, userForm);
+      setUserData({ ...userData!, ...userForm });
       setEditingUser(false);
-      alert("Datos de usuario actualizados!");
+      showMessage("Datos de usuario actualizados!");
     } catch (error) {
-      console.error("Error al actualizar usuario:", error);
+      console.error(error);
+      showMessage("Error al actualizar usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
   const handleChangePassword = async () => {
-    if (!currentPassword || !newPassword || !confirmNewPassword) {
-      alert("Completa todos los campos");
-      return;
-    }
-    if (newPassword !== confirmNewPassword) {
-      alert("Las nuevas contraseñas no coinciden");
-      return;
-    }
+    const { current, new: newP, confirm } = passwordForm;
+    if (!current || !newP || !confirm)
+      return showMessage("Completa todos los campos");
+    if (newP !== confirm) return showMessage("Las contraseñas no coinciden");
     if (!user) return;
-
     try {
-      const credential = EmailAuthProvider.credential(
-        user.email!,
-        currentPassword
+      setLoading(true);
+      await reauthenticateWithCredential(
+        user,
+        EmailAuthProvider.credential(user.email!, current)
       );
-      await reauthenticateWithCredential(user, credential);
-      await updatePassword(user, newPassword);
-      alert("Contraseña cambiada correctamente!");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmNewPassword("");
+      await updatePassword(user, newP);
+      setPasswordForm({ current: "", new: "", confirm: "" });
+      showMessage("Contraseña cambiada correctamente!");
     } catch (error) {
-      console.error("Error al cambiar contraseña:", error);
-      alert("Error cambiando contraseña. Verifica tus datos.");
+      console.error(error);
+      showMessage("Error cambiando contraseña");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -201,44 +198,36 @@ export default function Profile() {
     const password = prompt(
       "Introduce tu contraseña para confirmar la eliminación de tu cuenta:"
     );
-    if (!password) return;
-    if (!window.confirm("⚠️ Esto eliminará todos tus datos. ¿Continuar?"))
+    if (
+      !password ||
+      !window.confirm("⚠️ Esto eliminará todos tus datos. ¿Continuar?")
+    )
       return;
-
     try {
       setLoading(true);
-      const credential = EmailAuthProvider.credential(user.email!, password);
-      await reauthenticateWithCredential(user, credential);
-
-      // Borrar mascotas
-      const petsRef = collection(db, "pets");
-      const q = query(petsRef, where("userId", "==", user.uid));
-      const snapshot = await getDocs(q);
-      await Promise.all(
-        snapshot.docs.map((docSnap) => deleteDoc(doc(db, "pets", docSnap.id)))
+      await reauthenticateWithCredential(
+        user,
+        EmailAuthProvider.credential(user.email!, password)
       );
-
-      // Borrar usuario
+      const snapshot = await getDocs(
+        query(collection(db, "pets"), where("userId", "==", user.uid))
+      );
+      await Promise.all(
+        snapshot.docs.map((d) => deleteDoc(doc(db, "pets", d.id)))
+      );
       await deleteDoc(doc(db, "users", user.uid));
       await deleteUser(user);
-
-      alert("Cuenta eliminada con éxito.");
+      showMessage("Cuenta eliminada con éxito.");
     } catch (error: any) {
-      console.error("Error al borrar cuenta:", error);
-      if (error.code === "auth/wrong-password") {
-        alert("Contraseña incorrecta.");
-      } else {
-        alert("Error eliminando cuenta. Intenta nuevamente.");
-      }
+      console.error(error);
+      showMessage(
+        error.code === "auth/wrong-password"
+          ? "Contraseña incorrecta"
+          : "Error eliminando cuenta"
+      );
     } finally {
       setLoading(false);
     }
-  };
-
-  const calculateAge = (dob: string) => {
-    const birthDate = new Date(dob);
-    const diffMs = Date.now() - birthDate.getTime();
-    return Math.floor(diffMs / (365.25 * 24 * 60 * 60 * 1000));
   };
 
   if (!user)
@@ -250,250 +239,296 @@ export default function Profile() {
       <p style={{ textAlign: "center", marginTop: 50 }}>Cargando perfil...</p>
     );
 
-  // ---------- Estilos ----------
-  const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    padding: 16,
-    backgroundColor: "#1e1e2f",
-    color: "#fff",
-    boxSizing: "border-box",
-  };
-  const containerStyle: React.CSSProperties = {
-    width: "100%",
-    maxWidth: 700,
-    display: "flex",
-    flexDirection: "column",
-    padding: 24,
-    borderRadius: 12,
-    backgroundColor: "#2a2a3d",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-    marginBottom: 24,
-  };
-  const titleStyle: React.CSSProperties = {
-    marginBottom: 24,
-    textAlign: "center",
-  };
-  const sectionTitleStyle: React.CSSProperties = {
-    marginBottom: 16,
-    fontSize: 20,
-    fontWeight: 600,
-  };
-  const inputStyle: React.CSSProperties = {
-    width: "100%",
-    padding: 10,
-    borderRadius: 8,
-    border: "1px solid #555",
-    backgroundColor: "#1a1a2b",
-    color: "#fff",
-    marginBottom: 12,
-  };
-  const buttonStyle: React.CSSProperties = {
-    width: "100%",
-    padding: 12,
-    backgroundColor: "#4CAF50",
-    color: "#fff",
-    border: "none",
-    borderRadius: 8,
-    cursor: "pointer",
-    fontWeight: 600,
-    marginBottom: 12,
-  };
-  const smallButtonStyle: React.CSSProperties = {
-    padding: "6px 12px",
-    marginLeft: 8,
-    borderRadius: 6,
-    border: "none",
-    cursor: "pointer",
-  };
-  const deleteButtonStyle: React.CSSProperties = {
-    ...smallButtonStyle,
-    backgroundColor: "#e74c3c",
-    color: "#fff",
-  };
-  const editButtonStyle: React.CSSProperties = {
-    ...smallButtonStyle,
-    backgroundColor: "#3498db",
-    color: "#fff",
-  };
-  const petItemStyle: React.CSSProperties = {
-    padding: "12px 16px",
-    marginBottom: 8,
-    borderRadius: 8,
-    backgroundColor: "#3a3a5a",
-    display: "flex",
-    justifyContent: "space-between",
-    alignItems: "center",
-  };
-
   return (
-    <div style={pageStyle}>
-      <h1 style={titleStyle}>Perfil de usuario</h1>
+    <div
+      style={{
+        padding: 16,
+        minHeight: "100vh",
+        backgroundColor: "#1e1e2f",
+        color: "#fff",
+        boxSizing: "border-box",
+      }}
+    >
+      <h1 style={{ textAlign: "center", marginBottom: 24 }}>
+        Perfil de usuario
+      </h1>
 
-      <div style={containerStyle}>
-        {/* Datos usuario */}
-        <h2 style={sectionTitleStyle}>Datos del Usuario</h2>
-        {editingUser ? (
-          <>
+      {message && (
+        <div
+          style={{
+            backgroundColor: "#4caf50",
+            padding: 10,
+            borderRadius: 6,
+            marginBottom: 16,
+            textAlign: "center",
+          }}
+        >
+          {message}
+        </div>
+      )}
+
+      <div
+        style={{ maxWidth: 700, margin: "0 auto", display: "grid", gap: 24 }}
+      >
+        {/* User Info */}
+        <section
+          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+        >
+          <h2 style={{ marginBottom: 16 }}>Datos del Usuario</h2>
+          {editingUser ? (
+            <div style={{ display: "grid", gap: 12 }}>
+              <input
+                style={inputStyle}
+                placeholder="Nombre"
+                value={userForm.firstName}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, firstName: e.target.value })
+                }
+              />
+              <input
+                style={inputStyle}
+                placeholder="Apellidos"
+                value={userForm.lastName}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, lastName: e.target.value })
+                }
+              />
+              <input
+                style={inputStyle}
+                type="date"
+                value={userForm.dob}
+                onChange={(e) =>
+                  setUserForm({ ...userForm, dob: e.target.value })
+                }
+              />
+              <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
+                <button
+                  style={buttonStyle}
+                  onClick={handleSaveUser}
+                  disabled={loading}
+                >
+                  {loading ? "Guardando..." : "Guardar cambios"}
+                </button>
+                <button
+                  style={{ ...buttonStyle, backgroundColor: "#555" }}
+                  onClick={() => setEditingUser(false)}
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div style={{ display: "grid", gap: 8 }}>
+              <p>
+                <strong>Nombre:</strong> {userData.firstName}
+              </p>
+              <p>
+                <strong>Apellidos:</strong> {userData.lastName}
+              </p>
+              <p>
+                <strong>Email:</strong> {userData.email}
+              </p>
+              <p>
+                <strong>Fecha de nacimiento:</strong>{" "}
+                {new Date(userData.dob).toLocaleDateString()}
+              </p>
+              <button style={buttonStyle} onClick={() => setEditingUser(true)}>
+                Editar Datos
+              </button>
+            </div>
+          )}
+        </section>
+
+        {/* Password */}
+        <section
+          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+        >
+          <h2 style={{ marginBottom: 16 }}>Cambiar Contraseña</h2>
+          <div style={{ display: "grid", gap: 12 }}>
             <input
-              value={firstName}
-              onChange={(e) => setFirstName(e.target.value)}
-              placeholder="Nombre"
               style={inputStyle}
+              type="password"
+              placeholder="Contraseña actual"
+              value={passwordForm.current}
+              onChange={(e) =>
+                setPasswordForm({ ...passwordForm, current: e.target.value })
+              }
             />
             <input
-              value={lastName}
-              onChange={(e) => setLastName(e.target.value)}
-              placeholder="Apellidos"
               style={inputStyle}
+              type="password"
+              placeholder="Nueva contraseña"
+              value={passwordForm.new}
+              onChange={(e) =>
+                setPasswordForm({ ...passwordForm, new: e.target.value })
+              }
             />
             <input
-              type="date"
-              value={dob}
-              onChange={(e) => setDob(e.target.value)}
               style={inputStyle}
+              type="password"
+              placeholder="Confirmar nueva contraseña"
+              value={passwordForm.confirm}
+              onChange={(e) =>
+                setPasswordForm({ ...passwordForm, confirm: e.target.value })
+              }
             />
-            <button style={buttonStyle} onClick={handleSaveUser}>
-              Guardar cambios
-            </button>
             <button
-              style={{ ...buttonStyle, backgroundColor: "#555" }}
-              onClick={() => setEditingUser(false)}
+              style={buttonStyle}
+              onClick={handleChangePassword}
+              disabled={loading}
             >
-              Cancelar
+              {loading ? "Cambiando..." : "Cambiar Contraseña"}
             </button>
-          </>
-        ) : (
-          <>
-            <p>
-              <strong>Nombre:</strong> {userData.firstName}
-            </p>
-            <p>
-              <strong>Apellidos:</strong> {userData.lastName}
-            </p>
-            <p>
-              <strong>Email:</strong> {userData.email}
-            </p>
-            <p>
-              <strong>Fecha de nacimiento:</strong>{" "}
-              {new Date(userData.dob).toLocaleDateString()}
-            </p>
-            <button style={buttonStyle} onClick={() => setEditingUser(true)}>
-              Editar Datos
+          </div>
+        </section>
+
+        {/* Delete Account */}
+        <section
+          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+        >
+          <h2 style={{ marginBottom: 16 }}>Eliminar Cuenta</h2>
+          <button
+            style={{ ...buttonStyle, backgroundColor: "#e74c3c" }}
+            onClick={handleDeleteAccount}
+            disabled={loading}
+          >
+            {loading ? "Eliminando..." : "Borrar Cuenta"}
+          </button>
+        </section>
+
+        {/* Pets */}
+        <section
+          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+        >
+          <h2 style={{ marginBottom: 16 }}>
+            {editingPetId ? "Editar Mascota" : "Añadir Mascota"}
+          </h2>
+          <div style={{ display: "grid", gap: 12 }}>
+            <input
+              style={inputStyle}
+              placeholder="Nombre de la mascota"
+              value={petForm.name}
+              onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
+            />
+            <select
+              style={inputStyle}
+              value={petForm.type}
+              onChange={(e) => setPetForm({ ...petForm, type: e.target.value })}
+            >
+              <option value="" disabled>
+                Selecciona tipo de mascota
+              </option>
+              <option value="Perro">Perro</option>
+              <option value="Gato">Gato</option>
+              <option value="Ave">Ave</option>
+              <option value="Roedor">Roedor</option>
+              <option value="Otro">Otro</option>
+            </select>
+            <input
+              style={inputStyle}
+              type="date"
+              value={petForm.dob}
+              onChange={(e) => setPetForm({ ...petForm, dob: e.target.value })}
+            />
+            <button
+              style={buttonStyle}
+              onClick={handleAddOrEditPet}
+              disabled={loading}
+            >
+              {loading
+                ? "Guardando..."
+                : editingPetId
+                ? "Guardar Cambios"
+                : "Añadir Mascota"}
             </button>
-          </>
-        )}
+          </div>
 
-        {/* Cambiar contraseña */}
-        <h2 style={sectionTitleStyle}>Cambiar Contraseña</h2>
-        <input
-          type="password"
-          placeholder="Contraseña actual"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="Nueva contraseña"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          style={inputStyle}
-        />
-        <input
-          type="password"
-          placeholder="Confirmar nueva contraseña"
-          value={confirmNewPassword}
-          onChange={(e) => setConfirmNewPassword(e.target.value)}
-          style={inputStyle}
-        />
-        <button style={buttonStyle} onClick={handleChangePassword}>
-          Cambiar Contraseña
-        </button>
-
-        {/* Borrar cuenta */}
-        <h2 style={sectionTitleStyle}>Eliminar Cuenta</h2>
-        <button
-          style={{ ...buttonStyle, backgroundColor: "#e74c3c" }}
-          onClick={handleDeleteAccount}
-          disabled={loading}
-        >
-          {loading ? "Eliminando..." : "Borrar Cuenta"}
-        </button>
-
-        {/* Mascotas */}
-        <h2 style={sectionTitleStyle}>
-          {editingPetId ? "Editar Mascota" : "Añadir Mascota"}
-        </h2>
-        <input
-          type="text"
-          placeholder="Nombre de la mascota"
-          value={petName}
-          onChange={(e) => setPetName(e.target.value)}
-          style={inputStyle}
-        />
-        <select
-          value={petType}
-          onChange={(e) => setPetType(e.target.value)}
-          style={inputStyle}
-        >
-          <option value="" disabled>
-            Selecciona tipo de mascota
-          </option>
-          <option value="Perro">Perro</option>
-          <option value="Gato">Gato</option>
-          <option value="Ave">Ave</option>
-          <option value="Roedor">Roedor</option>
-          <option value="Otro">Otro</option>
-        </select>
-        <input
-          type="date"
-          value={petBirthdate}
-          onChange={(e) => setPetBirthdate(e.target.value)}
-          style={inputStyle}
-        />
-        {editingPetId ? (
-          <button style={buttonStyle} onClick={handleSaveEditPet}>
-            Guardar Cambios
-          </button>
-        ) : (
-          <button style={buttonStyle} onClick={handleAddPet}>
-            Añadir Mascota
-          </button>
-        )}
-
-        <h2 style={sectionTitleStyle}>Mis Mascotas</h2>
-        {pets.length === 0 ? (
-          <p>No tienes mascotas añadidas aún.</p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {pets.map((pet) => (
-              <li key={pet.id} style={petItemStyle}>
-                <div>
-                  <strong>{pet.name}</strong> - {pet.type} -{" "}
-                  {calculateAge(pet.dob)} años
-                </div>
-                <div>
-                  <button
-                    style={editButtonStyle}
-                    onClick={() => handleEditPet(pet)}
-                  >
-                    Editar
-                  </button>
-                  <button
-                    style={deleteButtonStyle}
-                    onClick={() => pet.id && handleDeletePet(pet.id)}
-                  >
-                    Borrar
-                  </button>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
+          <h2 style={{ marginTop: 24 }}>Mis Mascotas</h2>
+          {pets.length === 0 ? (
+            <p>No tienes mascotas añadidas aún.</p>
+          ) : (
+            <ul
+              style={{
+                listStyle: "none",
+                padding: 0,
+                display: "grid",
+                gap: 12,
+              }}
+            >
+              {pets.map((pet) => (
+                <li
+                  key={pet.id}
+                  style={{
+                    backgroundColor: "#3a3a5a",
+                    padding: 12,
+                    borderRadius: 8,
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <div>
+                    <strong>{pet.name}</strong> - {pet.type} -{" "}
+                    {calculateAge(pet.dob)} años
+                  </div>
+                  <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
+                    <button
+                      style={editButtonStyle}
+                      onClick={() => handleEditPet(pet)}
+                    >
+                      Editar
+                    </button>
+                    <button
+                      style={deleteButtonStyle}
+                      onClick={() => pet.id && handleDeletePet(pet.id)}
+                    >
+                      Borrar
+                    </button>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
       </div>
     </div>
   );
 }
+
+// ---------- Styles ----------
+const inputStyle: React.CSSProperties = {
+  width: "100%",
+  padding: 10,
+  borderRadius: 8,
+  border: "1px solid #555",
+  backgroundColor: "#1a1a2b",
+  color: "#fff",
+};
+
+const buttonStyle: React.CSSProperties = {
+  padding: 12,
+  backgroundColor: "#4CAF50",
+  color: "#fff",
+  border: "none",
+  borderRadius: 8,
+  cursor: "pointer",
+  fontWeight: 600,
+};
+
+const editButtonStyle: React.CSSProperties = {
+  padding: "6px 12px",
+  borderRadius: 6,
+  border: "none",
+  cursor: "pointer",
+  backgroundColor: "#3498db",
+  color: "#fff",
+};
+const deleteButtonStyle: React.CSSProperties = {
+  padding: "6px 12px",
+  borderRadius: 6,
+  border: "none",
+  cursor: "pointer",
+  backgroundColor: "#e74c3c",
+  color: "#fff",
+};
