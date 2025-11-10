@@ -37,11 +37,15 @@ El proyecto está desarrollado con **React, TypeScript y Firebase**, y utiliza *
 ```bash
 git clone https://github.com/tu-usuario/MyNest.git
 ```
-`cd MyNest`
+```bash
+cd MyNest
+```
 
 2. Instalar dependencias:
 
+```bash
 npm install
+```
 
 3. Configurar Firebase:
 
@@ -50,7 +54,9 @@ npm install
 
 4. Ejecutar la aplicación:
 
+```bash
 npm run dev
+```
 
 Abre tu navegador en `http://localhost:5173`.
 
