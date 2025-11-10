@@ -37,7 +37,7 @@ El proyecto está desarrollado con **React, TypeScript y Firebase**, y utiliza *
 ```bash
 git clone https://github.com/tu-usuario/MyNest.git
 ```
-cd MyNest
+`cd MyNest`
 
 2. Instalar dependencias:
 
