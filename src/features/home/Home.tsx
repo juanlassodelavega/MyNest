@@ -60,7 +60,7 @@ export default function Home() {
   const textStyle: React.CSSProperties = {
     fontSize: 18,
     lineHeight: 1.5,
-    color: "#ccc",
+    color: "white",
     zIndex: 2,
   };
 
