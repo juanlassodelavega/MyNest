@@ -8,7 +8,7 @@ import { useAuthState } from "react-firebase-hooks/auth";
 export default function Signup() {
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [age, setAge] = useState<number | "">("");
+  const [dob, setDob] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,7 +23,7 @@ export default function Signup() {
   const handleSignup = async () => {
     setErrorMessage("");
 
-    if (!firstName || !lastName || !email || !password || !confirmPassword || !age) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword || !dob) {
       setErrorMessage("Por favor completa todos los campos.");
       return;
     }
@@ -50,7 +50,7 @@ export default function Signup() {
       await setDoc(doc(db, "users", user.uid), {
         firstName,
         lastName,
-        age: Number(age),
+        dob,
         email: user.email,
       });
 
@@ -115,7 +115,7 @@ export default function Signup() {
 
         <input type="text" placeholder="Nombre" value={firstName} onChange={(e) => setFirstName(e.target.value)} style={inputStyle} />
         <input type="text" placeholder="Apellidos" value={lastName} onChange={(e) => setLastName(e.target.value)} style={inputStyle} />
-        <input type="number" placeholder="Edad" value={age} onChange={(e) => setAge(Number(e.target.value))} style={inputStyle} />
+        <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={inputStyle} />
         <input type="email" placeholder="Correo electrónico" value={email} onChange={(e) => setEmail(e.target.value)} style={inputStyle} />
         <input type="password" placeholder="Contraseña" value={password} onChange={(e) => setPassword(e.target.value)} style={inputStyle} />
         <input type="password" placeholder="Confirmar contraseña" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} style={inputStyle} />

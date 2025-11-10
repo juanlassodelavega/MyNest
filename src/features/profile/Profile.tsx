@@ -8,7 +8,7 @@ interface UserData {
   firstName: string;
   lastName: string;
   email: string;
-  age: number;
+  dob: string;
 }
 
 interface Pet {
@@ -30,11 +30,11 @@ export default function Profile() {
   const [editingUser, setEditingUser] = useState(false);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
-  const [age, setAge] = useState<number | "">("");
+  const [dob, setDob] = useState("");
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState(""); // confirmación
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
 
   // ---------- Load user and pets ----------
   useEffect(() => {
@@ -47,7 +47,7 @@ export default function Profile() {
         setUserData(data);
         setFirstName(data.firstName);
         setLastName(data.lastName);
-        setAge(data.age);
+        setDob(data.dob);
       }
     };
 
@@ -115,8 +115,8 @@ export default function Profile() {
     if (!user) return;
     try {
       const userRef = doc(db, "users", user.uid);
-      await updateDoc(userRef, { firstName, lastName, age });
-      setUserData({ ...userData!, firstName, lastName, age: age as number });
+      await updateDoc(userRef, { firstName, lastName, dob });
+      setUserData({ ...userData!, firstName, lastName, dob });
       setEditingUser(false);
       alert("Datos de usuario actualizados!");
     } catch (error) { console.error("Error al actualizar usuario:", error); }
@@ -194,7 +194,7 @@ export default function Profile() {
           <>
             <input value={firstName} onChange={(e) => setFirstName(e.target.value)} placeholder="Nombre" style={inputStyle} />
             <input value={lastName} onChange={(e) => setLastName(e.target.value)} placeholder="Apellidos" style={inputStyle} />
-            <input type="number" value={age} onChange={(e) => setAge(Number(e.target.value))} placeholder="Edad" style={inputStyle} />
+            <input type="date" value={dob} onChange={(e) => setDob(e.target.value)} style={inputStyle} />
             <button style={buttonStyle} onClick={handleSaveUser}>Guardar cambios</button>
             <button style={{...buttonStyle, backgroundColor: "#555"}} onClick={() => setEditingUser(false)}>Cancelar</button>
           </>
@@ -204,7 +204,7 @@ export default function Profile() {
               <p><strong>Nombre:</strong> {userData.firstName}</p>
               <p><strong>Apellidos:</strong> {userData.lastName}</p>
               <p><strong>Email:</strong> {userData.email}</p>
-              <p><strong>Edad:</strong> {userData.age}</p>
+              <p><strong>Fecha de nacimiento:</strong> {new Date(userData.dob).toLocaleDateString()}</p>
             </div>
             <button style={buttonStyle} onClick={() => setEditingUser(true)}>Editar Datos</button>
           </>
