@@ -9,9 +9,13 @@ interface PrivateRouteProps {
 export default function PrivateRoute({ children }: PrivateRouteProps) {
   const [user, loading] = useAuthState(auth);
 
-  if (loading) return <div>Cargando...</div>;
+  if (loading)
+    return (
+      <div style={{ padding: 24, textAlign: "center", color: "var(--ink-muted)" }}>
+        Checking your session...
+      </div>
+    );
 
-  // Si no hay usuario, redirige al login
   if (!user) return <Navigate to="/login" replace />;
 
   return children;

@@ -35,10 +35,10 @@ interface Reminder {
 }
 
 const PLACE_OPTIONS: { label: string; value: Place["type"] }[] = [
-  { label: "Veterinarios", value: "veterinario" },
-  { label: "Tiendas de mascotas", value: "tienda" },
-  { label: "Parques", value: "parque" },
-  { label: "Peluquería canina", value: "peluqueria" },
+  { label: "Veterinary", value: "veterinary" },
+  { label: "Pet shops", value: "shop" },
+  { label: "Parks", value: "park" },
+  { label: "Grooming", value: "grooming" },
 ];
 
 const getOverpassQuery = (
@@ -49,11 +49,11 @@ const getOverpassQuery = (
   lonMax: number
 ) => {
   switch (type) {
-    case "veterinario":
+    case "veterinary":
       return `[out:json][timeout:25]; node["amenity"="veterinary"](${latMin},${lonMin},${latMax},${lonMax}); out body;`;
-    case "tienda":
+    case "shop":
       return `[out:json][timeout:25]; node["shop"="pet"](${latMin},${lonMin},${latMax},${lonMax}); out body;`;
-    case "parque":
+    case "park":
       return `[out:json][timeout:25];
         (
           node["leisure"="park"](${latMin},${lonMin},${latMax},${lonMax});
@@ -61,7 +61,7 @@ const getOverpassQuery = (
           relation["leisure"="park"](${latMin},${lonMin},${latMax},${lonMax});
         );
         out center;`;
-    case "peluqueria":
+    case "grooming":
       return `[out:json][timeout:25]; node["shop"="pet_grooming"](${latMin},${lonMin},${latMax},${lonMax}); out body;`;
     default:
       return "";
@@ -78,7 +78,7 @@ export default function Dashboard() {
   });
   const [zoom] = useState(12);
   const [loading, setLoading] = useState(false);
-  const [mapHeight, setMapHeight] = useState(400); // altura del mapa
+  const [mapHeight, setMapHeight] = useState(400);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [remindersMap, setRemindersMap] = useState<{
@@ -88,7 +88,6 @@ export default function Dashboard() {
     [petId: string]: { type: string; date: string; notes: string };
   }>({});
 
-  // Ajustar altura del mapa según ancho de pantalla
   useEffect(() => {
     const updateMapHeight = () => {
       if (window.innerWidth < 600) {
@@ -102,16 +101,14 @@ export default function Dashboard() {
     return () => window.removeEventListener("resize", updateMapHeight);
   }, []);
 
-  // Ubicación inicial
   useEffect(() => {
     navigator.geolocation?.getCurrentPosition(
       (pos) =>
         setCenter({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
-      () => console.log("Ubicación no disponible, usando Madrid por defecto")
+      () => console.log("Location not available, using Madrid as default")
     );
   }, []);
 
-  // Cargar mascotas y recordatorios
   useEffect(() => {
     const fetchPets = async () => {
       if (!auth.currentUser) return;
@@ -143,13 +140,12 @@ export default function Dashboard() {
         setPets(petsData);
         setRemindersMap(tempRemindersMap);
       } catch (error) {
-        console.error("Error al obtener mascotas:", error);
+        console.error("Failed to load pets:", error);
       }
     };
     fetchPets();
   }, []);
 
-  // Buscar lugares con Overpass
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(async () => {
@@ -182,7 +178,7 @@ export default function Dashboard() {
           const res = await fetch(url);
           const data = await res.json();
           if (data.elements) {
-            data.elements.forEach((el: any) => {
+            data.elements.forEach((el: { id: string; lat?: number; lon?: number; center?: { lat: number; lon: number }; tags?: { name?: string } }) => {
               const lat = el.lat ?? el.center?.lat;
               const lng = el.lon ?? el.center?.lon;
               if (lat && lng) {
@@ -196,7 +192,7 @@ export default function Dashboard() {
             });
           }
         } catch (err) {
-          console.error("Error buscando lugares:", err);
+          console.error("Failed to search places:", err);
         }
       }
 
@@ -233,7 +229,7 @@ export default function Dashboard() {
         [petId]: { type: "", date: "", notes: "" },
       }));
     } catch (error) {
-      console.error("Error al añadir recordatorio:", error);
+      console.error("Failed to add reminder:", error);
     }
   };
 
@@ -245,30 +241,28 @@ export default function Dashboard() {
         [petId]: prev[petId].filter((r) => r.id !== reminderId),
       }));
     } catch (error) {
-      console.error("Error al borrar recordatorio:", error);
+      console.error("Failed to delete reminder:", error);
     }
   };
 
-  // ---------- Estilos ----------
   const pageStyle: React.CSSProperties = {
-    minHeight: "100vh",
+    minHeight: "calc(100vh - 150px)",
     display: "flex",
     flexDirection: "column",
     alignItems: "center",
     padding: 16,
-    backgroundColor: "#1e1e2f",
-    color: "#fff",
+    color: "var(--ink)",
     boxSizing: "border-box",
   };
   const containerStyle: React.CSSProperties = {
     width: "100%",
-    maxWidth: 700,
+    maxWidth: 820,
     display: "flex",
     flexDirection: "column",
     padding: 24,
-    borderRadius: 12,
-    backgroundColor: "#2a2a3d",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
+    borderRadius: 16,
+    backgroundColor: "var(--surface)",
+    boxShadow: "var(--shadow)",
     marginBottom: 24,
   };
   const mapStyle: React.CSSProperties = {
@@ -287,8 +281,8 @@ export default function Dashboard() {
     height: 40,
     marginLeft: -20,
     marginTop: -20,
-    border: "4px solid rgba(255,255,255,0.3)",
-    borderTop: "4px solid #fff",
+    border: "4px solid rgba(0, 109, 119, 0.2)",
+    borderTop: "4px solid var(--brand)",
     borderRadius: "50%",
     animation: "spin 1s linear infinite",
     zIndex: 1000,
@@ -303,7 +297,7 @@ export default function Dashboard() {
     display: "flex",
     alignItems: "center",
     gap: "4px",
-    backgroundColor: "#3a3a5a",
+    backgroundColor: "var(--surface-soft)",
     padding: "4px 8px",
     borderRadius: 6,
     cursor: "pointer",
@@ -322,7 +316,7 @@ export default function Dashboard() {
     padding: "12px 16px",
     marginBottom: 16,
     borderRadius: 8,
-    backgroundColor: "#3a3a5a",
+    backgroundColor: "var(--surface-soft)",
     display: "flex",
     flexDirection: "column",
     gap: 8,
@@ -336,7 +330,7 @@ export default function Dashboard() {
   const reminderStyle: React.CSSProperties = {
     display: "flex",
     justifyContent: "space-between",
-    backgroundColor: "#4a4a6a",
+    backgroundColor: "#e4e8f7",
     padding: "4px 8px",
     borderRadius: 6,
     marginBottom: 4,
@@ -346,22 +340,22 @@ export default function Dashboard() {
   const inputStyle: React.CSSProperties = {
     padding: 6,
     borderRadius: 6,
-    border: "1px solid #555",
-    backgroundColor: "#1a1a2b",
-    color: "#fff",
+    border: "1px solid var(--line)",
+    backgroundColor: "var(--surface)",
+    color: "var(--ink)",
     width: "100%",
     boxSizing: "border-box",
   };
   const addButtonStyle: React.CSSProperties = {
     cursor: "pointer",
-    color: "#4CAF50",
+    color: "var(--brand)",
     fontWeight: "bold",
     whiteSpace: "nowrap",
   };
 
   return (
     <div style={pageStyle}>
-      <h1 style={{ marginBottom: 24 }}>Mi Dashboard</h1>
+      <h1 style={{ marginBottom: 24 }}>My Dashboard</h1>
       <div style={containerStyle}>
         <div style={checkboxContainerStyle}>
           {PLACE_OPTIONS.map((option) => (
@@ -387,9 +381,9 @@ export default function Dashboard() {
         </div>
 
         <div style={petListContainerStyle}>
-          <h2 style={{ marginBottom: 16 }}>Mis Mascotas</h2>
+          <h2 style={{ marginBottom: 16 }}>My Pets</h2>
           {pets.length === 0 ? (
-            <p>No tienes mascotas añadidas aún.</p>
+            <p>No pets added yet.</p>
           ) : (
             <ul style={petListStyle}>
               {pets.map((pet) => {
@@ -400,12 +394,12 @@ export default function Dashboard() {
                       <strong>{pet.name}</strong> - {pet.type}
                     </div>
                     <div>
-                      {calculateAge(pet.dob)} años -{" "}
+                      {calculateAge(pet.dob)} years old -{" "}
                       {new Date(pet.dob).toLocaleDateString()}
                     </div>
 
                     <div>
-                      <strong>Recordatorios:</strong>
+                      <strong>Reminders:</strong>
                       <div style={reminderListStyle(reminderCount)}>
                         {(remindersMap[pet.id] || []).map((r) => (
                           <div key={r.id} style={reminderStyle}>
@@ -413,7 +407,7 @@ export default function Dashboard() {
                               {r.type} — {r.date}
                             </span>
                             <span
-                              style={{ cursor: "pointer", color: "#ff5555" }}
+                              style={{ cursor: "pointer", color: "var(--danger)" }}
                               onClick={() => handleDeleteReminder(pet.id, r.id)}
                             >
                               🗑
@@ -445,14 +439,12 @@ export default function Dashboard() {
                             }))
                           }
                         >
-                          <option value="">Tipo</option>
-                          <option value="Rabia">Rabia</option>
-                          <option value="Desparasitación">
-                            Desparasitación
-                          </option>
-                          <option value="Polivalente">Polivalente</option>
-                          <option value="Moquillo">Moquillo</option>
-                          <option value="Otro">Otro</option>
+                          <option value="">Type</option>
+                          <option value="Rabies">Rabies</option>
+                          <option value="Deworming">Deworming</option>
+                          <option value="Core vaccine">Core vaccine</option>
+                          <option value="Distemper">Distemper</option>
+                          <option value="Other">Other</option>
                         </select>
                         <input
                           type="date"
@@ -470,7 +462,7 @@ export default function Dashboard() {
                         />
                         <input
                           type="text"
-                          placeholder="Notas"
+                          placeholder="Notes"
                           style={inputStyle}
                           value={newReminderMap[pet.id]?.notes || ""}
                           onChange={(e) =>
@@ -487,7 +479,7 @@ export default function Dashboard() {
                           style={addButtonStyle}
                           onClick={() => handleAddReminder(pet.id)}
                         >
-                          ➕ Añadir
+                          ➕ Add
                         </span>
                       </div>
                     </div>

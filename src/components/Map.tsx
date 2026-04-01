@@ -17,7 +17,7 @@ interface LatLng {
 export interface MarkerData {
   position: LatLng;
   name: string;
-  type: "veterinario" | "tienda" | "parque" | "peluqueria";
+  type: "veterinary" | "shop" | "park" | "grooming";
 }
 
 interface MapProps {
@@ -40,7 +40,7 @@ function MapEvents({ setCenter }: { setCenter: (center: LatLng) => void }) {
 
 const getIcon = (type: MarkerData["type"]) => {
   switch (type) {
-    case "veterinario":
+    case "veterinary":
       return new L.Icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
@@ -50,7 +50,7 @@ const getIcon = (type: MarkerData["type"]) => {
         popupAnchor: [1, -34],
         shadowSize: [41, 41],
       });
-    case "tienda":
+    case "shop":
       return new L.Icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
@@ -60,7 +60,7 @@ const getIcon = (type: MarkerData["type"]) => {
         popupAnchor: [1, -34],
         shadowSize: [41, 41],
       });
-    case "parque":
+    case "park":
       return new L.Icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-orange.png",
@@ -70,7 +70,7 @@ const getIcon = (type: MarkerData["type"]) => {
         popupAnchor: [1, -34],
         shadowSize: [41, 41],
       });
-    case "peluqueria":
+    case "grooming":
       return new L.Icon({
         iconUrl:
           "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",

@@ -1,87 +1,71 @@
-# MyNest 🐾
+# MyNest
 
-**MyNest** es una red social para dueños de mascotas. Permite a los usuarios registrarse, iniciar sesión, gestionar su perfil y mascotas, y marcar en un mapa las ubicaciones de sus lugares favoritos para mascotas.  
+MyNest is a pet-focused social and utility app where users can manage their pets, track reminders, and explore nearby pet-friendly places on a map.
 
-El proyecto está desarrollado con **React, TypeScript y Firebase**, y utiliza **Leaflet** para los mapas interactivos.
+The project is built with React, TypeScript, Firebase, and Leaflet.
 
----
+## Features
 
-## 🚀 Características
+- Email/password authentication with Firebase Auth.
+- User profile management and password updates.
+- Pet CRUD flow (create, edit, delete).
+- Reminders per pet stored in Firestore subcollections.
+- Interactive map with nearby veterinary points, pet shops, parks, and grooming places.
+- Protected routes for authenticated pages.
+- Responsive layouts for desktop and mobile.
 
-- Registro e inicio de sesión con Firebase Authentication.
-- Perfil de usuario con edición de datos y cambio de contraseña.
-- Gestión de mascotas: añadir, editar y eliminar.
-- Dashboard con mapa interactivo de Leaflet para marcar ubicaciones.
-- Navegación protegida con rutas privadas (`PrivateRoute`) para usuarios autenticados.
-- Listado de mascotas con información detallada y edad calculada automáticamente.
-- Responsive y moderno, compatible con dark/light mode.
-- Navegación sencilla entre Home, Login, Signup, Dashboard y Profile.
+## Tech Stack
 
----
+- Frontend: React + TypeScript + Vite
+- Routing: React Router
+- Authentication: Firebase Auth
+- Database: Firebase Firestore
+- Maps: Leaflet + React-Leaflet
+- UI: React Icons + custom CSS tokens
 
-## 🛠 Tecnologías
+## Local Setup
 
-- **Frontend:** React + TypeScript + Vite  
-- **Autenticación:** Firebase Auth  
-- **Base de datos:** Firebase Firestore  
-- **Mapas:** Leaflet + React-Leaflet  
-- **Estilos:** CSS moderno con soporte dark/light mode  
-- **Otros:** React Router v7, React Icons, React Firebase Hooks  
-
----
-
-## 💻 Instalación
-
-1. Clonar el repositorio:
+1. Clone the repository.
 
 ```bash
-git clone https://github.com/tu-usuario/MyNest.git
-```
-```bash
+git clone https://github.com/your-user/MyNest.git
 cd MyNest
 ```
 
-2. Instalar dependencias:
+2. Install dependencies.
 
 ```bash
 npm install
 ```
 
-3. Configurar Firebase:
+3. Create a Firebase project and configure environment variables.
 
-- Crea un proyecto en [Firebase](https://firebase.google.com/).  
-- Copia tu configuración en `src/firebase.ts` usando variables de entorno.
+Create a .env.local file in the project root:
 
-4. Ejecutar la aplicación:
+```bash
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+4. Run the development server.
 
 ```bash
 npm run dev
 ```
 
-Abre tu navegador en `http://localhost:5173`.
+Open http://localhost:5173 in your browser.
 
----
+## Build
 
-## 🌱 Variables de entorno
+```bash
+npm run build
+```
 
-Crea un archivo `.env` o `.env.local` en la raíz del proyecto con las siguientes variables:
+## Authors
 
-VITE_FIREBASE_API_KEY=tu_api_key  
-VITE_FIREBASE_AUTH_DOMAIN=tu_auth_domain  
-VITE_FIREBASE_PROJECT_ID=tu_project_id  
-VITE_FIREBASE_STORAGE_BUCKET=tu_storage_bucket  
-VITE_FIREBASE_MESSAGING_SENDER_ID=tu_messaging_sender_id  
-VITE_FIREBASE_APP_ID=tu_app_id  
-
-Estas variables son usadas en `src/firebase.ts` para inicializar Firebase de forma segura.
-
----
-
-## ⚡ Autores
-
-Juan Lasso de la Vega – [GitHub](https://github.com/juanlassodelavega)  
-Miguel Lasso de la Vega – [GitHub](https://github.com/)
-
----
-
-> ¡Disfruta cuidando y compartiendo tus mascotas con MyNest! 🐶🐱
+- Juan Lasso de la Vega
+- Miguel Lasso de la Vega

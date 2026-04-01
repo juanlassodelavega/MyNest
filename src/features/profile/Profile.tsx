@@ -100,7 +100,7 @@ export default function Profile() {
   const handleAddOrEditPet = async () => {
     const { name, type, dob } = petForm;
     if (!name || !type || !dob)
-      return showMessage("Completa todos los campos de la mascota");
+      return showMessage("Please complete all pet fields.");
     try {
       setLoading(true);
       if (editingPetId) {
@@ -111,7 +111,7 @@ export default function Profile() {
             p.id === editingPetId ? { ...p, name, type, dob } : p
           )
         );
-        showMessage("Mascota actualizada!");
+        showMessage("Pet updated successfully.");
       } else {
         const docRef = await addDoc(collection(db, "pets"), {
           userId: user!.uid,
@@ -120,28 +120,28 @@ export default function Profile() {
           dob,
         });
         setPets([...pets, { id: docRef.id, name, type, dob }]);
-        showMessage("Mascota añadida!");
+        showMessage("Pet added successfully.");
       }
       clearPetForm();
       setEditingPetId(null);
     } catch (error) {
       console.error(error);
-      showMessage("Error al guardar la mascota");
+      showMessage("Could not save pet information.");
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeletePet = async (id: string) => {
-    if (!window.confirm("¿Seguro que quieres eliminar esta mascota?")) return;
+    if (!window.confirm("Are you sure you want to delete this pet?")) return;
     try {
       setLoading(true);
       await deleteDoc(doc(db, "pets", id));
       setPets(pets.filter((p) => p.id !== id));
-      showMessage("Mascota eliminada");
+      showMessage("Pet deleted.");
     } catch (error) {
       console.error(error);
-      showMessage("Error al eliminar mascota");
+      showMessage("Could not delete pet.");
     } finally {
       setLoading(false);
     }
@@ -161,10 +161,10 @@ export default function Profile() {
       await updateDoc(userRef, userForm);
       setUserData({ ...userData!, ...userForm });
       setEditingUser(false);
-      showMessage("Datos de usuario actualizados!");
+      showMessage("Profile updated successfully.");
     } catch (error) {
       console.error(error);
-      showMessage("Error al actualizar usuario");
+      showMessage("Could not update profile.");
     } finally {
       setLoading(false);
     }
@@ -173,8 +173,8 @@ export default function Profile() {
   const handleChangePassword = async () => {
     const { current, new: newP, confirm } = passwordForm;
     if (!current || !newP || !confirm)
-      return showMessage("Completa todos los campos");
-    if (newP !== confirm) return showMessage("Las contraseñas no coinciden");
+      return showMessage("Please complete all password fields.");
+    if (newP !== confirm) return showMessage("Passwords do not match.");
     if (!user) return;
     try {
       setLoading(true);
@@ -184,10 +184,10 @@ export default function Profile() {
       );
       await updatePassword(user, newP);
       setPasswordForm({ current: "", new: "", confirm: "" });
-      showMessage("Contraseña cambiada correctamente!");
+      showMessage("Password changed successfully.");
     } catch (error) {
       console.error(error);
-      showMessage("Error cambiando contraseña");
+      showMessage("Could not change password.");
     } finally {
       setLoading(false);
     }
@@ -196,11 +196,11 @@ export default function Profile() {
   const handleDeleteAccount = async () => {
     if (!user) return;
     const password = prompt(
-      "Introduce tu contraseña para confirmar la eliminación de tu cuenta:"
+      "Enter your password to confirm account deletion:"
     );
     if (
       !password ||
-      !window.confirm("⚠️ Esto eliminará todos tus datos. ¿Continuar?")
+      !window.confirm("This action will permanently delete all your data. Continue?")
     )
       return;
     try {
@@ -217,13 +217,13 @@ export default function Profile() {
       );
       await deleteDoc(doc(db, "users", user.uid));
       await deleteUser(user);
-      showMessage("Cuenta eliminada con éxito.");
-    } catch (error: any) {
+      showMessage("Account deleted successfully.");
+    } catch (error: { code?: string } | unknown) {
       console.error(error);
       showMessage(
-        error.code === "auth/wrong-password"
-          ? "Contraseña incorrecta"
-          : "Error eliminando cuenta"
+        typeof error === "object" && error !== null && "code" in error && error.code === "auth/wrong-password"
+          ? "Incorrect password."
+          : "Could not delete account."
       );
     } finally {
       setLoading(false);
@@ -232,35 +232,35 @@ export default function Profile() {
 
   if (!user)
     return (
-      <p style={{ textAlign: "center", marginTop: 50 }}>No estás logueado.</p>
+      <p style={{ textAlign: "center", marginTop: 50 }}>You are not signed in.</p>
     );
   if (!userData)
     return (
-      <p style={{ textAlign: "center", marginTop: 50 }}>Cargando perfil...</p>
+      <p style={{ textAlign: "center", marginTop: 50 }}>Loading profile...</p>
     );
 
   return (
     <div
       style={{
         padding: 16,
-        minHeight: "100vh",
-        backgroundColor: "#1e1e2f",
-        color: "#fff",
+        minHeight: "calc(100vh - 150px)",
+        color: "var(--ink)",
         boxSizing: "border-box",
       }}
     >
       <h1 style={{ textAlign: "center", marginBottom: 24 }}>
-        Perfil de usuario
+        User Profile
       </h1>
 
       {message && (
         <div
           style={{
-            backgroundColor: "#4caf50",
+            backgroundColor: "var(--ok)",
             padding: 10,
             borderRadius: 6,
             marginBottom: 16,
             textAlign: "center",
+            color: "white",
           }}
         >
           {message}
@@ -272,14 +272,14 @@ export default function Profile() {
       >
         {/* User Info */}
         <section
-          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+          style={{ backgroundColor: "var(--surface)", padding: 24, borderRadius: 12 }}
         >
-          <h2 style={{ marginBottom: 16 }}>Datos del Usuario</h2>
+          <h2 style={{ marginBottom: 16 }}>User Details</h2>
           {editingUser ? (
             <div style={{ display: "grid", gap: 12 }}>
               <input
                 style={inputStyle}
-                placeholder="Nombre"
+                placeholder="First name"
                 value={userForm.firstName}
                 onChange={(e) =>
                   setUserForm({ ...userForm, firstName: e.target.value })
@@ -287,7 +287,7 @@ export default function Profile() {
               />
               <input
                 style={inputStyle}
-                placeholder="Apellidos"
+                placeholder="Last name"
                 value={userForm.lastName}
                 onChange={(e) =>
                   setUserForm({ ...userForm, lastName: e.target.value })
@@ -307,33 +307,33 @@ export default function Profile() {
                   onClick={handleSaveUser}
                   disabled={loading}
                 >
-                  {loading ? "Guardando..." : "Guardar cambios"}
+                  {loading ? "Saving..." : "Save changes"}
                 </button>
                 <button
                   style={{ ...buttonStyle, backgroundColor: "#555" }}
                   onClick={() => setEditingUser(false)}
                 >
-                  Cancelar
+                  Cancel
                 </button>
               </div>
             </div>
           ) : (
             <div style={{ display: "grid", gap: 8 }}>
               <p>
-                <strong>Nombre:</strong> {userData.firstName}
+                <strong>First name:</strong> {userData.firstName}
               </p>
               <p>
-                <strong>Apellidos:</strong> {userData.lastName}
+                <strong>Last name:</strong> {userData.lastName}
               </p>
               <p>
                 <strong>Email:</strong> {userData.email}
               </p>
               <p>
-                <strong>Fecha de nacimiento:</strong>{" "}
+                <strong>Date of birth:</strong>{" "}
                 {new Date(userData.dob).toLocaleDateString()}
               </p>
               <button style={buttonStyle} onClick={() => setEditingUser(true)}>
-                Editar Datos
+                Edit Profile
               </button>
             </div>
           )}
@@ -341,14 +341,14 @@ export default function Profile() {
 
         {/* Password */}
         <section
-          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+          style={{ backgroundColor: "var(--surface)", padding: 24, borderRadius: 12 }}
         >
-          <h2 style={{ marginBottom: 16 }}>Cambiar Contraseña</h2>
+          <h2 style={{ marginBottom: 16 }}>Change Password</h2>
           <div style={{ display: "grid", gap: 12 }}>
             <input
               style={inputStyle}
               type="password"
-              placeholder="Contraseña actual"
+              placeholder="Current password"
               value={passwordForm.current}
               onChange={(e) =>
                 setPasswordForm({ ...passwordForm, current: e.target.value })
@@ -357,7 +357,7 @@ export default function Profile() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Nueva contraseña"
+              placeholder="New password"
               value={passwordForm.new}
               onChange={(e) =>
                 setPasswordForm({ ...passwordForm, new: e.target.value })
@@ -366,7 +366,7 @@ export default function Profile() {
             <input
               style={inputStyle}
               type="password"
-              placeholder="Confirmar nueva contraseña"
+              placeholder="Confirm new password"
               value={passwordForm.confirm}
               onChange={(e) =>
                 setPasswordForm({ ...passwordForm, confirm: e.target.value })
@@ -377,36 +377,36 @@ export default function Profile() {
               onClick={handleChangePassword}
               disabled={loading}
             >
-              {loading ? "Cambiando..." : "Cambiar Contraseña"}
+              {loading ? "Updating..." : "Update Password"}
             </button>
           </div>
         </section>
 
         {/* Delete Account */}
         <section
-          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+          style={{ backgroundColor: "var(--surface)", padding: 24, borderRadius: 12 }}
         >
-          <h2 style={{ marginBottom: 16 }}>Eliminar Cuenta</h2>
+          <h2 style={{ marginBottom: 16 }}>Delete Account</h2>
           <button
             style={{ ...buttonStyle, backgroundColor: "#e74c3c" }}
             onClick={handleDeleteAccount}
             disabled={loading}
           >
-            {loading ? "Eliminando..." : "Borrar Cuenta"}
+            {loading ? "Deleting..." : "Delete Account"}
           </button>
         </section>
 
         {/* Pets */}
         <section
-          style={{ backgroundColor: "#2a2a3d", padding: 24, borderRadius: 12 }}
+          style={{ backgroundColor: "var(--surface)", padding: 24, borderRadius: 12 }}
         >
           <h2 style={{ marginBottom: 16 }}>
-            {editingPetId ? "Editar Mascota" : "Añadir Mascota"}
+            {editingPetId ? "Edit Pet" : "Add Pet"}
           </h2>
           <div style={{ display: "grid", gap: 12 }}>
             <input
               style={inputStyle}
-              placeholder="Nombre de la mascota"
+              placeholder="Pet name"
               value={petForm.name}
               onChange={(e) => setPetForm({ ...petForm, name: e.target.value })}
             />
@@ -416,13 +416,13 @@ export default function Profile() {
               onChange={(e) => setPetForm({ ...petForm, type: e.target.value })}
             >
               <option value="" disabled>
-                Selecciona tipo de mascota
+                Select pet type
               </option>
-              <option value="Perro">Perro</option>
-              <option value="Gato">Gato</option>
-              <option value="Ave">Ave</option>
-              <option value="Roedor">Roedor</option>
-              <option value="Otro">Otro</option>
+              <option value="Dog">Dog</option>
+              <option value="Cat">Cat</option>
+              <option value="Bird">Bird</option>
+              <option value="Rodent">Rodent</option>
+              <option value="Other">Other</option>
             </select>
             <input
               style={inputStyle}
@@ -436,16 +436,16 @@ export default function Profile() {
               disabled={loading}
             >
               {loading
-                ? "Guardando..."
+                ? "Saving..."
                 : editingPetId
-                ? "Guardar Cambios"
-                : "Añadir Mascota"}
+                ? "Save Changes"
+                : "Add Pet"}
             </button>
           </div>
 
-          <h2 style={{ marginTop: 24 }}>Mis Mascotas</h2>
+          <h2 style={{ marginTop: 24 }}>My Pets</h2>
           {pets.length === 0 ? (
-            <p>No tienes mascotas añadidas aún.</p>
+            <p>No pets added yet.</p>
           ) : (
             <ul
               style={{
@@ -470,20 +470,20 @@ export default function Profile() {
                 >
                   <div>
                     <strong>{pet.name}</strong> - {pet.type} -{" "}
-                    {calculateAge(pet.dob)} años
+                    {calculateAge(pet.dob)} years old
                   </div>
                   <div style={{ display: "flex", gap: 8, marginTop: 8 }}>
                     <button
                       style={editButtonStyle}
                       onClick={() => handleEditPet(pet)}
                     >
-                      Editar
+                      Edit
                     </button>
                     <button
                       style={deleteButtonStyle}
                       onClick={() => pet.id && handleDeletePet(pet.id)}
                     >
-                      Borrar
+                      Delete
                     </button>
                   </div>
                 </li>

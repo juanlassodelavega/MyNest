@@ -20,5 +20,5 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 export const db = getFirestore(app);
 
-// ✅ Mantener sesión activa al recargar
+// Keep users signed in across page refreshes.
 setPersistence(auth, browserLocalPersistence);

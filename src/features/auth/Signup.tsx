@@ -13,6 +13,7 @@ export default function Signup() {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
 
@@ -31,26 +32,27 @@ export default function Signup() {
       !confirmPassword ||
       !dob
     ) {
-      setErrorMessage("Por favor completa todos los campos.");
+      setErrorMessage("Please complete all fields.");
       return;
     }
 
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setErrorMessage("Ingresa un correo válido.");
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
 
     if (password.length < 6) {
-      setErrorMessage("La contraseña debe tener al menos 6 caracteres.");
+      setErrorMessage("Password must be at least 6 characters.");
       return;
     }
 
     if (password !== confirmPassword) {
-      setErrorMessage("Las contraseñas no coinciden.");
+      setErrorMessage("Passwords do not match.");
       return;
     }
 
     try {
+      setIsSubmitting(true);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -66,8 +68,10 @@ export default function Signup() {
       });
 
       navigate("/dashboard");
-    } catch (error: any) {
-      setErrorMessage("Error al registrar usuario. Inténtalo más tarde.");
+    } catch {
+      setErrorMessage("We could not create your account. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -75,18 +79,18 @@ export default function Signup() {
     width: "100%",
     padding: 12,
     borderRadius: 8,
-    border: "1px solid #555",
-    backgroundColor: "#1a1a2b",
-    color: "#fff",
+    border: "1px solid var(--line)",
+    backgroundColor: "var(--surface)",
+    color: "var(--ink)",
     boxSizing: "border-box",
   } as const;
 
   const buttonStyle = {
     width: "100%",
     padding: 12,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "var(--brand)",
     color: "#fff",
-    border: "none",
+    border: "1px solid var(--brand)",
     borderRadius: 8,
     cursor: "pointer",
     fontWeight: 600,
@@ -96,46 +100,45 @@ export default function Signup() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "calc(100vh - 150px)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         padding: 16,
-        backgroundColor: "#1e1e2f",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 500,
+          maxWidth: 520,
           padding: 40,
-          borderRadius: 12,
-          backgroundColor: "#2a2a3d",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-          color: "#fff",
+          borderRadius: 16,
+          backgroundColor: "var(--surface)",
+          boxShadow: "var(--shadow)",
+          color: "var(--ink)",
           display: "flex",
           flexDirection: "column",
           gap: 16,
         }}
       >
-        <h1 style={{ textAlign: "center" }}>Registro</h1>
+        <h1 style={{ textAlign: "center", fontSize: 30 }}>Create your account</h1>
 
         {errorMessage && (
-          <p style={{ color: "#ff6b6b", textAlign: "center" }}>
+          <p style={{ color: "var(--danger)", textAlign: "center" }}>
             {errorMessage}
           </p>
         )}
 
         <input
           type="text"
-          placeholder="Nombre"
+          placeholder="First name"
           value={firstName}
           onChange={(e) => setFirstName(e.target.value)}
           style={inputStyle}
         />
         <input
           type="text"
-          placeholder="Apellidos"
+          placeholder="Last name"
           value={lastName}
           onChange={(e) => setLastName(e.target.value)}
           style={inputStyle}
@@ -148,34 +151,34 @@ export default function Signup() {
         />
         <input
           type="email"
-          placeholder="Correo electrónico"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={inputStyle}
         />
         <input
           type="password"
-          placeholder="Contraseña"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
         />
         <input
           type="password"
-          placeholder="Confirmar contraseña"
+          placeholder="Confirm password"
           value={confirmPassword}
           onChange={(e) => setConfirmPassword(e.target.value)}
           style={inputStyle}
         />
 
-        <button onClick={handleSignup} style={buttonStyle}>
-          Registrarse
+        <button onClick={handleSignup} style={buttonStyle} disabled={isSubmitting}>
+          {isSubmitting ? "Creating account..." : "Create account"}
         </button>
 
         <p style={{ textAlign: "center", marginTop: 8 }}>
-          ¿Ya tienes cuenta?{" "}
-          <Link to="/login" style={{ color: "#2196F3" }}>
-            Inicia sesión
+          Already have an account?{" "}
+          <Link to="/login" style={{ color: "var(--brand)" }}>
+            Sign in
           </Link>
         </p>
       </div>

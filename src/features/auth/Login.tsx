@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const [user] = useAuthState(auth);
 
@@ -19,15 +20,18 @@ export default function Login() {
     setErrorMessage("");
 
     if (!email || !password) {
-      setErrorMessage("Por favor completa todos los campos.");
+      setErrorMessage("Please fill in all fields.");
       return;
     }
 
     try {
+      setIsSubmitting(true);
       await signInWithEmailAndPassword(auth, email, password);
       navigate("/dashboard");
-    } catch (error: any) {
-      setErrorMessage("Credenciales inválidas. Intenta nuevamente.");
+    } catch {
+      setErrorMessage("Invalid credentials. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -35,18 +39,18 @@ export default function Login() {
     width: "100%",
     padding: 12,
     borderRadius: 8,
-    border: "1px solid #555",
-    backgroundColor: "#1a1a2b",
-    color: "#fff",
+    border: "1px solid var(--line)",
+    backgroundColor: "var(--surface)",
+    color: "var(--ink)",
     boxSizing: "border-box",
   } as const;
 
   const buttonStyle = {
     width: "100%",
     padding: 12,
-    backgroundColor: "#4CAF50",
+    backgroundColor: "var(--brand)",
     color: "#fff",
-    border: "none",
+    border: "1px solid var(--brand)",
     borderRadius: 8,
     cursor: "pointer",
     fontWeight: 600,
@@ -56,58 +60,57 @@ export default function Login() {
   return (
     <div
       style={{
-        minHeight: "100vh",
+        minHeight: "calc(100vh - 150px)",
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
         padding: 16,
-        backgroundColor: "#1e1e2f",
       }}
     >
       <div
         style={{
           width: "100%",
-          maxWidth: 500,
+          maxWidth: 480,
           padding: 40,
-          borderRadius: 12,
-          backgroundColor: "#2a2a3d",
-          boxShadow: "0 4px 12px rgba(0,0,0,0.3)",
-          color: "#fff",
+          borderRadius: 16,
+          backgroundColor: "var(--surface)",
+          boxShadow: "var(--shadow)",
+          color: "var(--ink)",
           display: "flex",
           flexDirection: "column",
           gap: 16,
         }}
       >
-        <h1 style={{ textAlign: "center" }}>Iniciar Sesión</h1>
+        <h1 style={{ textAlign: "center", fontSize: 30 }}>Welcome back</h1>
 
         {errorMessage && (
-          <p style={{ color: "#ff6b6b", textAlign: "center" }}>
+          <p style={{ color: "var(--danger)", textAlign: "center" }}>
             {errorMessage}
           </p>
         )}
 
         <input
           type="email"
-          placeholder="Correo electrónico"
+          placeholder="Email address"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           style={inputStyle}
         />
         <input
           type="password"
-          placeholder="Contraseña"
+          placeholder="Password"
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           style={inputStyle}
         />
-        <button onClick={handleLogin} style={buttonStyle}>
-          Iniciar sesión
+        <button onClick={handleLogin} style={buttonStyle} disabled={isSubmitting}>
+          {isSubmitting ? "Signing in..." : "Sign in"}
         </button>
 
         <p style={{ textAlign: "center", marginTop: 8 }}>
-          ¿No tienes cuenta?{" "}
-          <Link to="/signup" style={{ color: "#2196F3" }}>
-            Regístrate
+          New to MyNest?{" "}
+          <Link to="/signup" style={{ color: "var(--brand)" }}>
+            Create account
           </Link>
         </p>
       </div>
